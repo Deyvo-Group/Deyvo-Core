@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Deyvo\Core\Providers;
 
+use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\LocaleMiddleware;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Http\Middleware\SecurityHeadersMiddleware;
@@ -17,6 +18,8 @@ class CoreServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(DashboardManager::class);
+
         $this->mergeConfigFrom(
             __DIR__.'/../../config/core.php',
             'deyvo-core'
@@ -44,6 +47,11 @@ class CoreServiceProvider extends ServiceProvider
 
         if (config('deyvo-core.health.enabled', true)) {
             $this->loadRoutesFrom(__DIR__.'/../../routes/core.php');
+        }
+
+        if (config('deyvo-core.dashboard.enabled', false)) {
+            $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+            $this->loadRoutesFrom(__DIR__.'/../../routes/dashboard.php');
         }
 
         $this->publishes([

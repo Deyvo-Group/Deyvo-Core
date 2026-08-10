@@ -17,6 +17,32 @@ return [
         'middleware' => ['web'],
     ],
 
+    'dashboard' => [
+        'enabled' => env('DEYVO_DASHBOARD_ENABLED', false),
+        'path' => env('DEYVO_DASHBOARD_PATH', 'deyvo'),
+        'middleware' => ['web', 'auth'],
+        'navigation' => [
+            [
+                'label' => 'Overzicht',
+                'route' => 'deyvo.dashboard.index',
+                'active' => 'deyvo.dashboard.index',
+                'sort' => 10,
+            ],
+            [
+                'label' => 'Content',
+                'route' => 'deyvo.dashboard.contents.index',
+                'active' => 'deyvo.dashboard.contents.*',
+                'sort' => 20,
+            ],
+            [
+                'label' => 'Instellingen',
+                'route' => 'deyvo.dashboard.settings.index',
+                'active' => 'deyvo.dashboard.settings.*',
+                'sort' => 30,
+            ],
+        ],
+    ],
+
     'locale' => [
         'enabled' => env('DEYVO_LOCALE_ENABLED', true),
         'default' => env('APP_LOCALE', 'en'),
