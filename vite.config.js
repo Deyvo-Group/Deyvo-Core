@@ -6,10 +6,13 @@ export default defineConfig({
     tailwindcss()
   ],
   build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: 'resources/css/core.css'
-    }
-  }
+        outDir: 'dist',
+        emptyOutDir: true,
+        rollupOptions: {
+          input: [
+            'resources/css/core.css',
+            'resources/js/core.js'
+          ]
+        }
+      }
 });

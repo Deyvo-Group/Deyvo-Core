@@ -13,6 +13,7 @@
 </head>
 <body class="min-h-screen bg-neutral-50 text-neutral-950 antialiased">
     <main class="mx-auto w-full max-w-5xl px-6 py-10">
+        <x-deyvo::flash />
         {{ $slot }}
     </main>
 </body>
