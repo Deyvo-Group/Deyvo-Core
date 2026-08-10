@@ -55,14 +55,19 @@ class CoreServiceProvider extends ServiceProvider
     {
         $group = config('deyvo-core.middleware_group', 'web');
 
-        foreach ([
-            'deyvo-core.locale.enabled' => LocaleMiddleware::class,
-            'deyvo-core.request_id.enabled' => RequestIdMiddleware::class,
-            'deyvo-core.security_headers.enabled' => SecurityHeadersMiddleware::class,
-        ] as $configuration => $middleware) {
-            if (config($configuration, true)) {
-                $router->pushMiddlewareToGroup($group, $middleware);
-            }
+        $localeEnabled = config('deyvo-core.locale.enabled', true);
+        $timezoneEnabled = config('deyvo-core.timezone.enabled', true);
+
+        if ($localeEnabled || $timezoneEnabled) {
+            $router->pushMiddlewareToGroup($group, LocaleMiddleware::class);
+        }
+
+        if (config('deyvo-core.request_id.enabled', true)) {
+            $router->pushMiddlewareToGroup($group, RequestIdMiddleware::class);
+        }
+
+        if (config('deyvo-core.security_headers.enabled', true)) {
+            $router->pushMiddlewareToGroup($group, SecurityHeadersMiddleware::class);
         }
     }
 }
