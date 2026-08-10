@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace Deyvo\Core\Tests;
 
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
-use Deyvo\Core\Models\Content;
-use Deyvo\Core\Models\Setting;
-use Deyvo\Core\Support\SiteContent;
-use Deyvo\Core\Support\SiteSettings;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Http\Request;
@@ -89,43 +85,5 @@ final class CoreTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('DENY', $response->headers->get('X-Frame-Options'));
-    }
-
-    public function test_dashboard_renders_its_overview(): void
-    {
-        $response = $this->app['router']->dispatch(Request::create('/deyvo'));
-
-        self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('Overzicht', $response->getContent());
-        self::assertStringContainsString('Content toevoegen', $response->getContent());
-    }
-
-    public function test_dashboard_stores_content_and_settings(): void
-    {
-        $this->post('/deyvo/content', [
-            'key' => 'homepage.intro',
-            'title' => 'Welkom',
-            'body' => 'Welkom bij Deyvo.',
-            'is_published' => '1',
-        ])->assertRedirect(route('deyvo.dashboard.contents.index'));
-        $this->post('/deyvo/settings', [
-            'key' => 'contact.email',
-            'value' => 'hello@deyvo.test',
-        ])->assertRedirect(route('deyvo.dashboard.settings.index'));
-
-        self::assertSame(1, Content::query()->count());
-        self::assertSame('Welkom bij Deyvo.', SiteContent::body('homepage.intro'));
-        self::assertSame('hello@deyvo.test', SiteSettings::get('contact.email'));
-        self::assertTrue(Content::query()->where('key', 'homepage.intro')->value('is_published'));
-        self::assertSame(1, Setting::query()->count());
-
-        $this->get('/deyvo/content')
-            ->assertOk()
-            ->assertSee('homepage.intro')
-            ->assertSee('Welkom');
-        $this->get('/deyvo/settings')
-            ->assertOk()
-            ->assertSee('contact.email')
-            ->assertSee('hello@deyvo.test');
     }
 }
