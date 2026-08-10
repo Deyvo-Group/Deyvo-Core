@@ -66,6 +66,41 @@ Render the messages with `<x-deyvo::flash />`. The Deyvo layout includes this co
 
 The health endpoint is available at `/_deyvo/health` by default and returns `{"status":"ok"}`.
 
+## Dashboard
+
+The dashboard is disabled by default. Enable it and run the package migrations in the consuming application.
+
+```env
+DEYVO_DASHBOARD_ENABLED=true
+```
+
+```bash
+php artisan migrate
+```
+
+The dashboard is available at `/deyvo` and uses the host application's `auth` middleware by default. It manages reusable content and sitewide settings without providing authentication itself.
+
+```php
+use Deyvo\Core\Support\SiteContent;
+use Deyvo\Core\Support\SiteSettings;
+
+$intro = SiteContent::body('homepage.intro');
+$email = SiteSettings::get('contact.email');
+```
+
+Additional packages can register their own dashboard navigation items from a service provider.
+
+```php
+use Deyvo\Core\Dashboard\DashboardManager;
+
+app(DashboardManager::class)->registerNavigation(
+    'Reports',
+    'reports.index',
+    'reports.*',
+    40
+);
+```
+
 ## Maintenance
 
 Use the package maintenance view with Laravel's built-in maintenance mode.
