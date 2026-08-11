@@ -70,6 +70,20 @@ import '../../vendor/deyvo/core/resources/js/core.js';
 
 Importeer dit bestand na JavaScript-imports van de host. Core koppelt zijn stylesheet aan deze entry en geeft dashboard- en editorcontrols binnen hun Deyvo-scope voorrang, zonder algemene websitestijlen buiten die scope te wijzigen.
 
+### Core interface-styling
+
+De aanvullende Core-styling staat standaard aan. Een website kan deze uitzetten zonder dashboard-, editor- of packagefunctionaliteit uit te schakelen.
+
+~~~php
+'ui' => [
+    'styles' => [
+        'enabled' => false,
+    ],
+],
+~~~
+
+Of gebruik `DEYVO_CORE_STYLES_ENABLED=false` in het `.env`-bestand van de website.
+
 ## Algemene instellingen
 
 Een item in pages verschijnt als een extra dashboardonderdeel.

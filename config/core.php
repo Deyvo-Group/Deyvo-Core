@@ -9,6 +9,12 @@ return [
 
     'middleware_group' => 'web',
 
+    'ui' => [
+        'styles' => [
+            'enabled' => env('DEYVO_CORE_STYLES_ENABLED', true),
+        ],
+    ],
+
     'features' => [],
 
     'health' => [

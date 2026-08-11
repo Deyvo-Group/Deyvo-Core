@@ -27,6 +27,18 @@ Import the package JavaScript entry after the host imports in the consuming appl
 import '../../vendor/deyvo/core/resources/js/core.js';
 ```
 
+Core interface styles are enabled by default. A consuming website can opt out of the additional Deyvo interface styling while keeping the package behavior active.
+
+```php
+'ui' => [
+    'styles' => [
+        'enabled' => false,
+    ],
+],
+```
+
+Use `DEYVO_CORE_STYLES_ENABLED=false` for the same setting through the environment.
+
 ## Components
 
 ```blade
