@@ -49,7 +49,9 @@ final class PageContent
 
         $attributes = [
             'data-deyvo-field' => $key,
+            'data-deyvo-path' => "{$sectionKey}.{$fieldKey}",
             'data-deyvo-type' => $field['type'],
+            'data-deyvo-value' => $this->stringValue($value),
             'data-deyvo-url' => route('deyvo.dashboard.pages.fields.update', ['page' => $revision->page_id]),
             'data-deyvo-options' => json_encode($field['options'], JSON_THROW_ON_ERROR),
             'class' => 'cursor-pointer rounded-sm outline outline-1 outline-sky-400/60 outline-offset-2',
