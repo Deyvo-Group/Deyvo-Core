@@ -351,6 +351,8 @@ final class CoreTest extends TestCase
         $this->get("/deyvo/pages/{$page->id}/preview")->assertRedirect('http://localhost/home');
         $this->blade('@deyvoEditable(\'home.hero.title\') @deyvoEditor')
             ->assertSee('data-deyvo-field="home.hero.title"', false)
+            ->assertSee('data-deyvo-path="hero.title"', false)
+            ->assertSee('data-deyvo-value="Live titel"', false)
             ->assertSee('Live titel')
             ->assertSee('data-deyvo-core-styles="enabled"', false)
             ->assertSee('data-deyvo-editor', false)

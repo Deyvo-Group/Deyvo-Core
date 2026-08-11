@@ -141,14 +141,17 @@ if (editor instanceof HTMLElement) {
         'X-CSRF-TOKEN': token ?? ''
       },
       body: JSON.stringify({
-        field: field.dataset.deyvoField,
+        field: field.dataset.deyvoPath ?? field.dataset.deyvoField,
         value
       })
     });
 
     if (!response.ok) {
-      status.textContent = 'Opslaan mislukt';
-      editorStatus?.replaceChildren('Opslaan mislukt');
+      const payload = await response.json().catch(() => null);
+      const message = typeof payload?.message === 'string' ? payload.message : 'Opslaan mislukt';
+
+      status.textContent = message;
+      editorStatus?.replaceChildren(message);
       return;
     }
 
@@ -160,6 +163,7 @@ if (editor instanceof HTMLElement) {
 
     document.querySelectorAll(selector).forEach((marker) => {
       marker.textContent = renderedValue;
+      marker.setAttribute('data-deyvo-value', renderedValue);
     });
 
     status.textContent = 'Opgeslagen';
@@ -169,7 +173,7 @@ if (editor instanceof HTMLElement) {
   const open = (field) => {
     const type = field.dataset.deyvoType ?? 'text';
     const options = JSON.parse(field.dataset.deyvoOptions ?? '[]');
-    const value = field.textContent ?? '';
+    const value = field.dataset.deyvoValue ?? field.textContent ?? '';
     const label = document.createElement('p');
     const status = document.createElement('p');
     const close = document.createElement('button');
