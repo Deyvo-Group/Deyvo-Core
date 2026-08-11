@@ -3,3 +3,157 @@
 @source "../views/**/*.blade.php";
 @source "../js/**/*.js";
 @source "../../src/**/*.php";
+
+[data-deyvo-dashboard] {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #edf5f1 0%, #f7f7f1 48%, #eaf2f5 100%);
+    color: #18302e;
+}
+
+[data-deyvo-dashboard] > div > aside {
+    background: rgba(24, 48, 46, 0.84);
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08), 18px 0 45px rgba(24, 48, 46, 0.14);
+    backdrop-filter: blur(24px) saturate(145%);
+}
+
+[data-deyvo-dashboard] > div > div > header {
+    background: rgba(255, 255, 255, 0.58);
+    border-color: rgba(24, 48, 46, 0.12);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(22px) saturate(150%);
+}
+
+[data-deyvo-dashboard] .bg-white {
+    background-color: rgba(255, 255, 255, 0.64);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 16px 38px rgba(38, 66, 62, 0.08);
+    backdrop-filter: blur(18px) saturate(145%);
+}
+
+[data-deyvo-dashboard] .bg-neutral-50 {
+    background-color: rgba(243, 248, 246, 0.58);
+}
+
+[data-deyvo-dashboard] .bg-neutral-100 {
+    background-color: rgba(237, 245, 241, 0.64);
+}
+
+[data-deyvo-dashboard] .border-neutral-200,
+[data-deyvo-dashboard] .border-neutral-300 {
+    border-color: rgba(24, 48, 46, 0.16);
+}
+
+[data-deyvo-dashboard] .bg-neutral-950 {
+    background: rgba(24, 48, 46, 0.92);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px rgba(24, 48, 46, 0.18);
+}
+
+[data-deyvo-dashboard] .hover\:bg-neutral-800:hover {
+    background-color: #294f4b;
+}
+
+[data-deyvo-dashboard] .hover\:bg-neutral-100:hover {
+    background-color: rgba(255, 255, 255, 0.82);
+}
+
+[data-deyvo-dashboard] input:not([type="checkbox"]),
+[data-deyvo-dashboard] select,
+[data-deyvo-dashboard] textarea {
+    background-color: rgba(255, 255, 255, 0.54);
+    border-color: rgba(24, 48, 46, 0.18);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 2px rgba(24, 48, 46, 0.05), 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-deyvo-dashboard] input:not([type="checkbox"]):focus,
+[data-deyvo-dashboard] select:focus,
+[data-deyvo-dashboard] textarea:focus {
+    border-color: #15847a;
+    box-shadow: 0 0 0 3px rgba(21, 132, 122, 0.16), inset 0 1px 2px rgba(24, 48, 46, 0.05);
+}
+
+[data-deyvo-dashboard] input[type="checkbox"] {
+    border-color: rgba(24, 48, 46, 0.26);
+    accent-color: #15847a;
+}
+
+[data-deyvo-dashboard] a.text-sky-700,
+[data-deyvo-dashboard] .text-sky-700 {
+    color: #0f766e;
+}
+
+[data-deyvo-dashboard] a.hover\:text-sky-900:hover,
+[data-deyvo-dashboard] .hover\:text-sky-900:hover {
+    color: #134e4a;
+}
+
+[data-deyvo-dashboard] table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+[data-deyvo-dashboard] thead {
+    background-color: rgba(232, 242, 238, 0.72);
+}
+
+[data-deyvo-dashboard] [data-deyvo-builder] {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+[data-deyvo-dashboard] [data-deyvo-builder-list] > article {
+    border-radius: 8px;
+}
+
+[data-deyvo-dashboard] [data-deyvo-builder-dialog] {
+    background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(24, 48, 46, 0.18);
+    border-radius: 8px;
+    box-shadow: 0 28px 80px rgba(24, 48, 46, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(24px) saturate(150%);
+}
+
+[data-deyvo-editor-overlay] {
+    background: rgba(255, 255, 255, 0.68);
+    border-color: rgba(21, 132, 122, 0.24);
+    border-radius: 8px;
+    box-shadow: 0 20px 54px rgba(17, 68, 62, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(22px) saturate(155%);
+}
+
+[data-deyvo-editor-overlay] .bg-sky-700 {
+    background: rgba(15, 118, 110, 0.92);
+}
+
+[data-deyvo-editor-overlay] .bg-sky-50 {
+    background-color: rgba(204, 251, 241, 0.62);
+}
+
+[data-deyvo-editor-overlay] .border-sky-200 {
+    border-color: rgba(21, 132, 122, 0.22);
+}
+
+[data-deyvo-editor-overlay] .text-sky-700 {
+    color: #0f766e;
+}
+
+[data-deyvo-editor] {
+    border-color: rgba(21, 132, 122, 0.24);
+    border-radius: 8px;
+    box-shadow: 0 24px 64px rgba(17, 68, 62, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(22px) saturate(150%);
+}
+
+[data-deyvo-editor].bg-white {
+    background-color: rgba(255, 255, 255, 0.76);
+}
+
+@media (max-width: 767px) {
+    [data-deyvo-dashboard] > div > div > header {
+        background: rgba(255, 255, 255, 0.74);
+    }
+
+    [data-deyvo-editor-overlay] {
+        max-width: calc(100vw - 1.5rem);
+    }
+}
