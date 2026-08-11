@@ -16,7 +16,7 @@
         @vite($vite)
     @endif
 </head>
-<body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased">
+<body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased" data-deyvo-dashboard>
     <div class="min-h-screen md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
         <aside class="hidden bg-neutral-950 px-4 py-5 text-neutral-200 md:block">
             <a href="{{ route('deyvo.dashboard.index') }}" class="block px-3 text-lg font-semibold text-white">{{ $appName }}</a>
