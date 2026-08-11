@@ -61,11 +61,48 @@ document.addEventListener('click', (event) => {
   }
 });
 
+const editorOverlay = document.querySelector('[data-deyvo-editor-overlay]');
+
+if (editorOverlay instanceof HTMLElement && editorOverlay.parentElement !== document.body) {
+  document.body.append(editorOverlay);
+}
+
 const editor = document.querySelector('[data-deyvo-editor]');
 
 if (editor instanceof HTMLElement) {
   let pendingSave;
+  let activeField;
   const editorStatus = document.querySelector('[data-deyvo-editor-status]');
+
+  if (editor.parentElement !== document.body) {
+    document.body.append(editor);
+  }
+
+  const position = (field) => {
+    const padding = 16;
+    const gap = 12;
+    const fieldBounds = field.getBoundingClientRect();
+    const editorBounds = editor.getBoundingClientRect();
+    const maxLeft = Math.max(padding, window.innerWidth - editorBounds.width - padding);
+    const left = Math.min(Math.max(fieldBounds.left, padding), maxLeft);
+    const below = fieldBounds.bottom + gap;
+    const above = fieldBounds.top - editorBounds.height - gap;
+    const top = below + editorBounds.height <= window.innerHeight - padding || above < padding
+      ? Math.min(below, window.innerHeight - editorBounds.height - padding)
+      : above;
+
+    editor.style.setProperty('left', `${Math.round(left)}px`, 'important');
+    editor.style.setProperty('top', `${Math.max(padding, Math.round(top))}px`, 'important');
+  };
+
+  const reposition = () => {
+    if (activeField instanceof HTMLElement && !editor.hidden) {
+      position(activeField);
+    }
+  };
+
+  window.addEventListener('resize', reposition);
+  window.addEventListener('scroll', reposition, true);
 
   const save = async (field, control, status) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -118,19 +155,21 @@ if (editor instanceof HTMLElement) {
     const close = document.createElement('button');
     let control;
 
+    activeField = field;
     editor.hidden = false;
-    editor.className = 'fixed inset-x-4 bottom-4 z-50 border border-neutral-200 bg-white p-5 shadow-xl sm:left-auto sm:w-96 relative';
+    editor.className = '';
     editor.replaceChildren();
 
-    label.className = 'text-sm font-semibold text-neutral-950';
+    label.setAttribute('data-deyvo-editor-label', '');
     label.textContent = field.dataset.deyvoField ?? 'Veld';
-    status.className = 'mt-2 text-sm text-neutral-500';
+    status.setAttribute('data-deyvo-editor-status-message', '');
     status.textContent = 'Conceptmodus';
     close.type = 'button';
-    close.className = 'absolute right-4 top-4 text-sm font-medium text-neutral-600 hover:text-neutral-950';
+    close.setAttribute('data-deyvo-editor-close', '');
     close.textContent = 'Sluiten';
     close.addEventListener('click', () => {
       editor.hidden = true;
+      activeField = undefined;
     });
 
     if (type === 'textarea') {
@@ -158,9 +197,7 @@ if (editor instanceof HTMLElement) {
       }
     }
 
-    control.className = type === 'boolean'
-      ? 'mt-5 size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950'
-      : 'mt-5 block w-full rounded-md border-neutral-300 text-sm text-neutral-950 shadow-sm focus:border-neutral-950 focus:ring-neutral-950';
+    control.setAttribute('data-deyvo-editor-control', '');
     control.addEventListener(type === 'select' || type === 'boolean' ? 'change' : 'input', () => {
       clearTimeout(pendingSave);
       pendingSave = setTimeout(() => {
@@ -172,6 +209,7 @@ if (editor instanceof HTMLElement) {
     });
 
     editor.append(label, close, control, status);
+    position(field);
     control.focus();
   };
 
