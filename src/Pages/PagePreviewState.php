@@ -57,4 +57,12 @@ final class PagePreviewState
 
         return $revision instanceof PageRevision ? $this->revisions[$pageKey] = $revision : null;
     }
+
+    public function current(): ?PageRevision
+    {
+        $state = request()->session()->get(self::SessionKey);
+        $pageKey = is_array($state) ? ($state['page_key'] ?? null) : null;
+
+        return is_string($pageKey) ? $this->revision($pageKey) : null;
+    }
 }

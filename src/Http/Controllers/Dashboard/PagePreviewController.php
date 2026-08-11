@@ -28,4 +28,16 @@ final class PagePreviewController
 
         return redirect()->to($this->pages->previewUrl($page, $revision));
     }
+
+    public function stop(Page $page): RedirectResponse
+    {
+        $this->preview->stop();
+        $revision = $page->publishedRevision;
+
+        if (! $revision instanceof PageRevision) {
+            return redirect()->route('deyvo.dashboard.pages.edit', $page);
+        }
+
+        return redirect()->to($this->pages->previewUrl($page, $revision));
+    }
 }

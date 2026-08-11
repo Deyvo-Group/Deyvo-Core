@@ -235,6 +235,8 @@ Add deyvoEditor once near the end of the host layout and include the Core JavaSc
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @deyvoEditor
 
+When a dashboard preview is active, `@deyvoEditor` renders a fixed overlay with the page title, path, draft version, save state and actions for the dashboard or leaving editor mode. Visitors never receive the overlay.
+
 The inline editor supports the schema field types text, textarea, email, url, select, and boolean. It saves concepts through the authenticated dashboard route. Rich text, media, menus, and legacy-data import are intentionally separate modules or migration work.
 
 ## Block Builder

@@ -352,7 +352,10 @@ final class CoreTest extends TestCase
         $this->blade('@deyvoEditable(\'home.hero.title\') @deyvoEditor')
             ->assertSee('data-deyvo-field="home.hero.title"', false)
             ->assertSee('Live titel')
-            ->assertSee('data-deyvo-editor', false);
+            ->assertSee('data-deyvo-editor', false)
+            ->assertSee('data-deyvo-editor-overlay', false)
+            ->assertSee('Editor actief')
+            ->assertSee('Concept v1');
         $this->patchJson("/deyvo/pages/{$page->id}/fields", [
             'field' => 'hero.title',
             'value' => 'Concepttitel',
@@ -364,6 +367,9 @@ final class CoreTest extends TestCase
         self::assertSame('Concepttitel', PageRevision::query()->findOrFail($page->draft_revision_id)->sections['hero']['title']);
         $this->blade('@deyvoEditable(\'home.hero.title\')')
             ->assertSee('Concepttitel');
+
+        $this->post("/deyvo/pages/{$page->id}/preview/stop")
+            ->assertRedirect('http://localhost/home');
     }
 
     public function test_page_builder_stores_publishes_and_renders_configured_blocks(): void
