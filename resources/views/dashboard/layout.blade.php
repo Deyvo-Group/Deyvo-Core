@@ -7,6 +7,9 @@
 @php($vite = config('deyvo-core.dashboard.vite', []))
 @php($actor = app(\Deyvo\Core\Support\Actor::class)->current())
 @php($gradient = config('deyvo-core.ui.dashboard.gradient'))
+@php($logoutRoute = config('deyvo-core.dashboard.logout_route', 'logout'))
+@php($logoutUrl = is_string($logoutRoute) && $logoutRoute !== '' && \Illuminate\Support\Facades\Route::has($logoutRoute) ? route($logoutRoute) : null)
+@php($actorLabel = $actor['name'] ?? $actor['email'] ?? 'Onbekende gebruiker')
 
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-deyvo-core-styles="{{ config('deyvo-core.ui.styles.enabled', true) ? 'enabled' : 'disabled' }}">
@@ -57,9 +60,18 @@
                         @endforeach
                     </nav>
 
-                    <div class="ml-auto hidden min-w-0 text-right sm:block" data-deyvo-dashboard-user>
-                        <p class="text-xs font-medium text-neutral-500">Aangemeld als</p>
-                        <p class="truncate text-sm font-semibold text-neutral-950">{{ $actor['name'] ?? $actor['email'] ?? 'Onbekende gebruiker' }}</p>
+                    <div class="ml-auto flex min-w-0 shrink-0 items-center gap-3" data-deyvo-dashboard-account>
+                        <div class="min-w-0 text-right" data-deyvo-dashboard-user>
+                            <p class="hidden text-xs font-medium text-neutral-500 sm:block">Aangemeld als</p>
+                            <p class="max-w-36 truncate text-sm font-semibold text-neutral-950 sm:max-w-52">{{ $actorLabel }}</p>
+                        </div>
+
+                        @if ($logoutUrl !== null)
+                            <form method="POST" action="{{ $logoutUrl }}">
+                                @csrf
+                                <button type="submit" title="Uitloggen" aria-label="Uitloggen" class="inline-flex h-9 items-center justify-center px-3 text-sm font-semibold" data-deyvo-dashboard-logout>Uitloggen</button>
+                            </form>
+                        @endif
                     </div>
 
                     <p class="hidden text-sm text-neutral-500 lg:block">{{ config('deyvo-core.version') }}</p>

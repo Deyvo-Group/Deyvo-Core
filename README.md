@@ -59,6 +59,18 @@ The dashboard keeps a blue Core gradient by default. Override it per website in 
 
 Use `DEYVO_DASHBOARD_GRADIENT` for the same configuration through the environment. Set `DEYVO_AUDIT_ENABLED=false` only when activity registration must be disabled.
 
+## Account And Logout
+
+Core shows the current host user in the dashboard and editor top bars. It renders a logout button only when the configured named host route exists. Laravel Fortify uses `logout` by default.
+
+```php
+'dashboard' => [
+    'logout_route' => 'logout',
+],
+```
+
+Use `DEYVO_DASHBOARD_LOGOUT_ROUTE` when the host application uses another route name. Core does not provide a logout route or authentication logic.
+
 ## Components
 
 ```blade

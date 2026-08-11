@@ -9,6 +9,7 @@ use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Support\Actor;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 
 final class PageContent
@@ -96,8 +97,15 @@ final class PageContent
         $stopUrl = e(route('deyvo.dashboard.pages.preview.stop', $page));
         $token = e(csrf_token());
         $actor = e($this->actor->label());
+        $logout = '';
+        $logoutRoute = config('deyvo-core.dashboard.logout_route', 'logout');
 
-        return new HtmlString('<aside data-deyvo-editor-overlay class="border border-sky-200 bg-white/95 shadow-lg backdrop-blur"><div class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3"><div class="flex min-w-0 items-center gap-3"><span class="inline-flex shrink-0 bg-sky-700 px-2 py-1 text-xs font-semibold text-white">Editor actief</span><div class="min-w-0"><p class="truncate text-sm font-semibold text-neutral-950">'.$title.'</p><p class="truncate text-xs text-neutral-500">'.$slug.'</p></div></div><div class="flex flex-wrap items-center gap-2 text-sm"><span data-deyvo-editor-actor>Ingelogd: '.$actor.'</span><span class="border border-sky-200 bg-sky-50 px-2 py-1 font-medium text-sky-800">Concept v'.$revision->version.'</span><span data-deyvo-editor-status class="text-neutral-500">Concept</span><a href="'.$dashboardUrl.'" class="font-medium text-sky-700 hover:text-sky-900">Dashboard</a><form method="POST" action="'.$stopUrl.'"><input type="hidden" name="_token" value="'.$token.'"><button type="submit" class="font-medium text-neutral-600 hover:text-neutral-950">Editor verlaten</button></form></div></div></aside><aside data-deyvo-core-styles="'.$styles.'" data-deyvo-editor hidden></aside>');
+        if (is_string($logoutRoute) && $logoutRoute !== '' && Route::has($logoutRoute)) {
+            $logoutUrl = e(route($logoutRoute));
+            $logout = '<form method="POST" action="'.$logoutUrl.'"><input type="hidden" name="_token" value="'.$token.'"><button type="submit" title="Uitloggen" aria-label="Uitloggen" class="font-medium text-neutral-600 hover:text-neutral-950" data-deyvo-editor-logout>Uitloggen</button></form>';
+        }
+
+        return new HtmlString('<aside data-deyvo-editor-overlay class="border border-sky-200 bg-white/95 shadow-lg backdrop-blur"><div class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3"><div class="flex min-w-0 items-center gap-3"><span class="inline-flex shrink-0 bg-sky-700 px-2 py-1 text-xs font-semibold text-white">Editor actief</span><div class="min-w-0"><p class="truncate text-sm font-semibold text-neutral-950">'.$title.'</p><p class="truncate text-xs text-neutral-500">'.$slug.'</p></div></div><div class="flex flex-wrap items-center gap-2 text-sm"><span data-deyvo-editor-actor>Ingelogd: '.$actor.'</span><span class="border border-sky-200 bg-sky-50 px-2 py-1 font-medium text-sky-800">Concept v'.$revision->version.'</span><span data-deyvo-editor-status class="text-neutral-500">Concept</span><a href="'.$dashboardUrl.'" class="font-medium text-sky-700 hover:text-sky-900">Dashboard</a>'.$logout.'<form method="POST" action="'.$stopUrl.'"><input type="hidden" name="_token" value="'.$token.'"><button type="submit" class="font-medium text-neutral-600 hover:text-neutral-950">Editor verlaten</button></form></div></div></aside><aside data-deyvo-core-styles="'.$styles.'" data-deyvo-editor hidden></aside>');
     }
 
     private function publishedRevision(string $pageKey): ?PageRevision
