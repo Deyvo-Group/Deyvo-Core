@@ -20,10 +20,11 @@
 
             <nav class="mt-8 space-y-1" aria-label="Dashboard navigatie">
                 @foreach ($navigation as $item)
-                    <a href="{{ route($item['route']) }}" @class([
+                    @php($isActive = request()->routeIs($item['active']) && (! isset($item['page']) || request()->route('page') === $item['page']))
+                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" @class([
                         'block rounded-md px-3 py-2 text-sm font-medium transition',
-                        'bg-white/10 text-white' => request()->routeIs($item['active']),
-                        'text-neutral-300 hover:bg-white/5 hover:text-white' => ! request()->routeIs($item['active']),
+                        'bg-white/10 text-white' => $isActive,
+                        'text-neutral-300 hover:bg-white/5 hover:text-white' => ! $isActive,
                     ])>
                         {{ $item['label'] }}
                     </a>
@@ -38,10 +39,11 @@
 
                     <nav class="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto md:hidden" aria-label="Dashboard navigatie">
                         @foreach ($navigation as $item)
-                            <a href="{{ route($item['route']) }}" @class([
+                            @php($isActive = request()->routeIs($item['active']) && (! isset($item['page']) || request()->route('page') === $item['page']))
+                            <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" @class([
                                 'whitespace-nowrap text-sm font-medium',
-                                'text-neutral-950' => request()->routeIs($item['active']),
-                                'text-neutral-500 hover:text-neutral-950' => ! request()->routeIs($item['active']),
+                                'text-neutral-950' => $isActive,
+                                'text-neutral-500 hover:text-neutral-950' => ! $isActive,
                             ])>{{ $item['label'] }}</a>
                         @endforeach
                     </nav>

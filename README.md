@@ -101,6 +101,73 @@ app(DashboardManager::class)->registerNavigation(
 );
 ```
 
+## Custom Dashboard Schema
+
+Each host application can provide a trusted JSON schema that adds dashboard pages and fields. Deyvo Core reads this file locally; it does not expose a public endpoint that accepts dashboard definitions.
+
+Publish the starter file.
+
+    php artisan vendor:publish --tag=deyvo-dashboard-schema
+
+Set its relative or absolute path in the host application's config/deyvo-core.php.
+
+    'dashboard' => [
+        'schema' => [
+            'path' => 'resources/deyvo/dashboard.json',
+        ],
+    ],
+
+The schema supports text, textarea, email, url, select, and boolean fields. Values use the existing deyvo_settings table by default. Set storage to content for text that should be available through SiteContent.
+
+    {
+      "pages": [
+        {
+          "key": "website",
+          "label": "Website",
+          "description": "Pas algemene websitegegevens aan.",
+          "sort": 40,
+          "fields": [
+            {
+              "key": "contact.email",
+              "label": "E-mailadres",
+              "type": "email",
+              "required": true
+            },
+            {
+              "key": "homepage.intro",
+              "label": "Introductie",
+              "type": "textarea",
+              "storage": "content",
+              "content_title": "Homepage introductie"
+            },
+            {
+              "key": "website.status",
+              "label": "Status",
+              "type": "select",
+              "options": [
+                {
+                  "value": "concept",
+                  "label": "Concept"
+                },
+                {
+                  "value": "live",
+                  "label": "Live"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+For generated JSON, the host application can register the schema during boot.
+
+    use Deyvo\Core\Dashboard\DashboardManager;
+
+    app(DashboardManager::class)->registerSchema(
+        (string) file_get_contents(resource_path('deyvo/dashboard.json')),
+    );
+
 ## Maintenance
 
 Use the package maintenance view with Laravel's built-in maintenance mode.

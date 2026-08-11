@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Deyvo\Core\Tests;
 
+use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Models\Content;
 use Deyvo\Core\Models\Setting;
@@ -127,5 +128,89 @@ final class CoreTest extends TestCase
             ->assertOk()
             ->assertSee('contact.email')
             ->assertSee('hello@deyvo.test');
+    }
+
+    public function test_dashboard_renders_and_saves_a_custom_json_schema(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [
+                [
+                    'key' => 'website',
+                    'label' => 'Website',
+                    'description' => 'Beheer de websitegegevens.',
+                    'sort' => 40,
+                    'fields' => [
+                        [
+                            'key' => 'contact.email',
+                            'label' => 'E-mailadres',
+                            'type' => 'email',
+                            'required' => true,
+                        ],
+                        [
+                            'key' => 'homepage.intro',
+                            'label' => 'Introductie',
+                            'type' => 'textarea',
+                            'storage' => 'content',
+                            'content_title' => 'Homepage introductie',
+                        ],
+                        [
+                            'key' => 'website.status',
+                            'label' => 'Status',
+                            'type' => 'select',
+                            'options' => [
+                                [
+                                    'value' => 'concept',
+                                    'label' => 'Concept',
+                                ],
+                                [
+                                    'value' => 'live',
+                                    'label' => 'Live',
+                                ],
+                            ],
+                        ],
+                        [
+                            'key' => 'contact.visible',
+                            'label' => 'Toon contactgegevens',
+                            'type' => 'boolean',
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('Website');
+        $this->get('/deyvo/custom/website')
+            ->assertOk()
+            ->assertSee('Beheer de websitegegevens.')
+            ->assertSee('Toon contactgegevens');
+        $this->put('/deyvo/custom/website', [
+            'values' => [
+                'hello@deyvo.test',
+                'Welkom bij Deyvo.',
+                'live',
+                '1',
+            ],
+        ])->assertRedirect(route('deyvo.dashboard.custom.show', ['page' => 'website']));
+
+        self::assertSame('hello@deyvo.test', SiteSettings::get('contact.email'));
+        self::assertSame('Welkom bij Deyvo.', SiteContent::body('homepage.intro'));
+        self::assertSame('live', SiteSettings::get('website.status'));
+        self::assertSame('1', SiteSettings::get('contact.visible'));
+        self::assertSame('Homepage introductie', Content::query()->where('key', 'homepage.intro')->value('title'));
+        $this->get('/deyvo/custom/unknown')->assertNotFound();
+    }
+
+    public function test_dashboard_reads_a_schema_from_the_configured_json_path(): void
+    {
+        config()->set('deyvo-core.dashboard.schema.path', __DIR__.'/Fixtures/dashboard.json');
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('Zoekmachine');
+        $this->get('/deyvo/custom/zoekmachine')
+            ->assertOk()
+            ->assertSee('Beheer de zichtbaarheid van de website.');
     }
 }
