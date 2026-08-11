@@ -57,6 +57,10 @@ class CoreServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../../config/core.php' => config_path('deyvo-core.php'),
         ], 'deyvo-config');
+
+        $this->publishes([
+            __DIR__.'/../../resources/dashboard-schema.json' => resource_path('deyvo/dashboard.json'),
+        ], 'deyvo-dashboard-schema');
     }
 
     private function registerMiddleware(Router $router): void

@@ -1,0 +1,17 @@
+{
+  "pages": [
+    {
+      "key": "zoekmachine",
+      "label": "Zoekmachine",
+      "description": "Beheer de zichtbaarheid van de website.",
+      "sort": 40,
+      "fields": [
+        {
+          "key": "seo.indexable",
+          "label": "Opneembaar in zoekmachines",
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}

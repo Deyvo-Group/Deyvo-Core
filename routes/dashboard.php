@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Deyvo\Core\Http\Controllers\Dashboard\ContentController;
+use Deyvo\Core\Http\Controllers\Dashboard\CustomPageController;
 use Deyvo\Core\Http\Controllers\Dashboard\DashboardController;
 use Deyvo\Core\Http\Controllers\Dashboard\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -26,4 +27,11 @@ Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
         Route::get('settings/{setting}/edit', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings/{setting}', [SettingController::class, 'update'])->name('settings.update');
         Route::delete('settings/{setting}', [SettingController::class, 'destroy'])->name('settings.destroy');
+
+        Route::get('custom/{page}', [CustomPageController::class, 'show'])
+            ->where('page', '[a-z0-9][a-z0-9-]*')
+            ->name('custom.show');
+        Route::put('custom/{page}', [CustomPageController::class, 'update'])
+            ->where('page', '[a-z0-9][a-z0-9-]*')
+            ->name('custom.update');
     });

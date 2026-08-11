@@ -21,6 +21,9 @@ return [
         'enabled' => env('DEYVO_DASHBOARD_ENABLED', false),
         'path' => env('DEYVO_DASHBOARD_PATH', 'deyvo'),
         'middleware' => ['web', 'auth'],
+        'schema' => [
+            'path' => env('DEYVO_DASHBOARD_SCHEMA_PATH'),
+        ],
         'navigation' => [
             [
                 'label' => 'Overzicht',
