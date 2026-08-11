@@ -68,6 +68,8 @@ De host moet haar Tailwind- en JavaScript-entrypoints aan dashboard.vite geven.
 import '../../vendor/deyvo/core/resources/js/core.js';
 ~~~
 
+Importeer dit bestand na JavaScript-imports van de host. Core koppelt zijn stylesheet aan deze entry en geeft dashboard- en editorcontrols binnen hun Deyvo-scope voorrang, zonder algemene websitestijlen buiten die scope te wijzigen.
+
 ## Algemene instellingen
 
 Een item in pages verschijnt als een extra dashboardonderdeel.

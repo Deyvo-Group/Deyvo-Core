@@ -1,3 +1,5 @@
+import '../css/core.css';
+
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) {
     return;
