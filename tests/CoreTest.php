@@ -352,6 +352,7 @@ final class CoreTest extends TestCase
         $this->blade('@deyvoEditable(\'home.hero.title\') @deyvoEditor')
             ->assertSee('data-deyvo-field="home.hero.title"', false)
             ->assertSee('Live titel')
+            ->assertSee('data-deyvo-core-styles="enabled"', false)
             ->assertSee('data-deyvo-editor', false)
             ->assertSee('data-deyvo-editor-overlay', false)
             ->assertSee('Editor actief')
@@ -370,6 +371,22 @@ final class CoreTest extends TestCase
 
         $this->post("/deyvo/pages/{$page->id}/preview/stop")
             ->assertRedirect('http://localhost/home');
+    }
+
+    public function test_core_interface_styles_can_be_disabled_by_the_consuming_website(): void
+    {
+        config()->set('deyvo-core.ui.styles.enabled', false);
+
+        $this->view('deyvo::layouts.app', ['slot' => 'Inhoud'])
+            ->assertSee('data-deyvo-core-styles="disabled"', false)
+            ->assertSee('Inhoud');
+    }
+
+    public function test_core_interface_styles_are_enabled_by_default(): void
+    {
+        $this->view('deyvo::layouts.app', ['slot' => 'Inhoud'])
+            ->assertSee('data-deyvo-core-styles="enabled"', false)
+            ->assertSee('Inhoud');
     }
 
     public function test_page_builder_stores_publishes_and_renders_configured_blocks(): void

@@ -1,3 +1,22 @@
+const stylesEnabled = () => {
+  const root = document.documentElement.dataset.deyvoCoreStyles;
+  const marker = document.querySelector('[data-deyvo-core-styles]')?.getAttribute('data-deyvo-core-styles');
+
+  return (root ?? marker ?? 'enabled') !== 'disabled';
+};
+
+const loadStyles = () => {
+  if (stylesEnabled()) {
+    import('../css/core.css');
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadStyles, { once: true });
+} else {
+  loadStyles();
+}
+
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) {
     return;
