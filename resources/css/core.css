@@ -101,20 +101,55 @@
     background-color: rgba(255, 255, 255, 0.82);
 }
 
-[data-deyvo-dashboard] input:not([type="checkbox"]),
-[data-deyvo-dashboard] select,
-[data-deyvo-dashboard] textarea {
-    background-color: rgba(255, 255, 255, 0.54);
-    border-color: rgba(30, 64, 175, 0.18);
-    border-radius: 8px;
-    box-shadow: inset 0 1px 2px rgba(30, 64, 175, 0.05), 0 1px 0 rgba(255, 255, 255, 0.74);
+[data-deyvo-dashboard] label.block {
+    color: #1e3a8a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1rem;
 }
 
-[data-deyvo-dashboard] input:not([type="checkbox"]):focus,
+[data-deyvo-dashboard] input:not([type="checkbox"]):not([type="hidden"]),
+[data-deyvo-dashboard] select,
+[data-deyvo-dashboard] textarea {
+    min-height: 2.875rem;
+    padding: 0.625rem 0.875rem;
+    color: #172554;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(239, 246, 255, 0.74) 100%);
+    border-color: rgba(37, 99, 235, 0.22);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), inset 0 0 0 1px rgba(255, 255, 255, 0.26), 0 2px 5px rgba(30, 64, 175, 0.08);
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+[data-deyvo-dashboard] textarea {
+    min-height: 10rem;
+    padding-block: 0.75rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+[data-deyvo-dashboard] input:not([type="checkbox"]):not([type="hidden"])::placeholder,
+[data-deyvo-dashboard] textarea::placeholder {
+    color: #64748b;
+    font-weight: 400;
+}
+
+[data-deyvo-dashboard] input:not([type="checkbox"]):not([type="hidden"]):hover,
+[data-deyvo-dashboard] select:hover,
+[data-deyvo-dashboard] textarea:hover {
+    border-color: rgba(37, 99, 235, 0.38);
+}
+
+[data-deyvo-dashboard] input:not([type="checkbox"]):not([type="hidden"]):focus,
 [data-deyvo-dashboard] select:focus,
 [data-deyvo-dashboard] textarea:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), inset 0 1px 2px rgba(30, 64, 175, 0.05);
+    background-color: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 4px 10px rgba(37, 99, 235, 0.1);
 }
 
 [data-deyvo-dashboard] input[type="checkbox"] {
@@ -317,10 +352,21 @@ dialog[data-deyvo-modal]::backdrop,
 [data-deyvo-editor] input,
 [data-deyvo-editor] select,
 [data-deyvo-editor] textarea {
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    color: #172554;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
     border-color: rgba(37, 99, 235, 0.2);
     border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.64);
-    box-shadow: inset 0 1px 2px rgba(30, 64, 175, 0.06);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(239, 246, 255, 0.72) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 2px 5px rgba(30, 64, 175, 0.08);
+}
+
+[data-deyvo-editor] textarea {
+    min-height: 9rem;
+    line-height: 1.6;
 }
 
 [data-deyvo-editor] input:focus,
