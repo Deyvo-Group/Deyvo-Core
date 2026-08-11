@@ -7,6 +7,7 @@ namespace Deyvo\Core\Http\Controllers\Dashboard;
 use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Pages\PageManager;
+use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ final class PageController
 {
     public function __construct(
         private PageManager $pages,
+        private AuditLogger $audit,
     ) {
     }
 
@@ -53,6 +55,11 @@ final class PageController
         try {
             $page = $this->pages->create($attributes);
         } catch (InvalidArgumentException $exception) {
+            $this->audit->record('page.create_failed', null, [
+                'subject_label' => $attributes['title'],
+                'message' => $exception->getMessage(),
+            ]);
+
             return back()->withInput()->withErrors(['blocks' => $exception->getMessage()]);
         }
 
@@ -82,6 +89,11 @@ final class PageController
         try {
             $this->pages->updateDraft($page, $this->pageAttributes($request));
         } catch (InvalidArgumentException $exception) {
+            $this->audit->record('page.update_failed', $page, [
+                'page_key' => $page->key,
+                'message' => $exception->getMessage(),
+            ]);
+
             return back()->withInput()->withErrors(['blocks' => $exception->getMessage()]);
         }
 
@@ -95,6 +107,11 @@ final class PageController
         try {
             $this->pages->publish($page);
         } catch (InvalidArgumentException $exception) {
+            $this->audit->record('page.publish_failed', $page, [
+                'page_key' => $page->key,
+                'message' => $exception->getMessage(),
+            ]);
+
             return back()->withErrors(['slug' => $exception->getMessage()]);
         }
 

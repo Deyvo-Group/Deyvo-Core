@@ -4,6 +4,7 @@
             <div>
                 <h1 class="text-2xl font-semibold text-neutral-950">{{ $revision->title }}</h1>
                 <p class="mt-2 text-sm text-neutral-600">Versie {{ $revision->version }} als {{ $page->draft_revision_id ? 'concept' : 'gepubliceerde pagina' }}.</p>
+                <p class="mt-1 text-sm text-neutral-600">Laatst bijgewerkt door {{ $revision->updated_by_name ?? $revision->updated_by_email ?? $revision->created_by_name ?? $revision->created_by_email ?? 'Onbekend' }}.</p>
             </div>
 
             <div class="flex items-center gap-3">

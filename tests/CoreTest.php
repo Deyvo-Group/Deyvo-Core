@@ -7,6 +7,7 @@ namespace Deyvo\Core\Tests;
 use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Models\Content;
+use Deyvo\Core\Models\AuditLog;
 use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Models\Setting;
@@ -16,6 +17,7 @@ use Deyvo\Core\Support\SiteSettings;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Http\Request;
+use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 
 final class CoreTest extends TestCase
@@ -133,6 +135,51 @@ final class CoreTest extends TestCase
             ->assertSee('hello@deyvo.test');
     }
 
+    public function test_dashboard_records_attributed_activity_and_renders_it(): void
+    {
+        $this->actingAs(new GenericUser([
+            'id' => 7,
+            'name' => 'Dirk Deyvo',
+            'email' => 'dirk@deyvo.test',
+        ]));
+
+        $this->post('/deyvo/content', [
+            'key' => 'homepage.activity',
+            'title' => 'Activiteit',
+            'body' => 'Wordt bijgehouden.',
+            'is_published' => '1',
+        ])->assertRedirect();
+
+        $activity = AuditLog::query()->firstOrFail();
+
+        self::assertSame('content.created', $activity->event);
+        self::assertSame('Dirk Deyvo', $activity->actor_name);
+        self::assertSame('dirk@deyvo.test', $activity->actor_email);
+        self::assertSame('homepage.activity', $activity->subject_label);
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('Dirk Deyvo')
+            ->assertSee('Recente activiteit');
+        $this->get('/deyvo/activity')
+            ->assertOk()
+            ->assertSee('Content aangemaakt')
+            ->assertSee('Dirk Deyvo');
+        $this->get("/deyvo/activity/{$activity->id}")
+            ->assertOk()
+            ->assertSee('Request-id')
+            ->assertSee('homepage.activity');
+    }
+
+    public function test_dashboard_gradient_can_be_configured(): void
+    {
+        config()->set('deyvo-core.ui.dashboard.gradient', 'linear-gradient(135deg, #ffffff 0%, #dbeafe 100%)');
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('--deyvo-dashboard-gradient: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%);', false);
+    }
+
     public function test_dashboard_renders_and_saves_a_custom_json_schema(): void
     {
         app(DashboardManager::class)->registerSchema(json_encode([
@@ -219,6 +266,12 @@ final class CoreTest extends TestCase
 
     public function test_pages_support_drafts_publications_and_revision_restore(): void
     {
+        $this->actingAs(new GenericUser([
+            'id' => 8,
+            'name' => 'Pagina Beheerder',
+            'email' => 'pagina@deyvo.test',
+        ]));
+
         app(DashboardManager::class)->registerSchema(json_encode([
             'pages' => [],
             'templates' => [
@@ -271,6 +324,7 @@ final class CoreTest extends TestCase
         self::assertNotNull($page->draft_revision_id);
         self::assertNull($page->published_revision_id);
         self::assertSame('Welkom', PageRevision::query()->firstOrFail()->sections['hero']['title']);
+        self::assertSame('Pagina Beheerder', PageRevision::query()->firstOrFail()->created_by_name);
         $this->get('/deyvo/pages')->assertOk()->assertSee('Concept')->assertSee('/home');
 
         $this->post("/deyvo/pages/{$page->id}/publish")->assertRedirect();
@@ -299,12 +353,19 @@ final class CoreTest extends TestCase
         $page->refresh();
         self::assertNotNull($page->draft_revision_id);
         self::assertSame(2, PageRevision::query()->count());
+        self::assertSame('Pagina Beheerder', PageRevision::query()->findOrFail($page->draft_revision_id)->updated_by_name);
         $this->post("/deyvo/pages/{$page->id}/revisions/{$page->published_revision_id}/restore")->assertRedirect();
         self::assertSame(3, PageRevision::query()->count());
     }
 
     public function test_preview_markers_and_autosave_keep_published_content_intact(): void
     {
+        $this->actingAs(new GenericUser([
+            'id' => 9,
+            'name' => 'Editor Beheerder',
+            'email' => 'editor@deyvo.test',
+        ]));
+
         app(DashboardManager::class)->registerSchema(json_encode([
             'pages' => [],
             'templates' => [
@@ -358,6 +419,7 @@ final class CoreTest extends TestCase
             ->assertSee('data-deyvo-editor', false)
             ->assertSee('data-deyvo-editor-overlay', false)
             ->assertSee('Editor actief')
+            ->assertSee('Ingelogd: Editor Beheerder')
             ->assertSee('Concept v1');
         $this->patchJson("/deyvo/pages/{$page->id}/fields", [
             'field' => 'hero.title',
@@ -370,6 +432,13 @@ final class CoreTest extends TestCase
         self::assertSame('Concepttitel', PageRevision::query()->findOrFail($page->draft_revision_id)->sections['hero']['title']);
         $this->blade('@deyvoEditable(\'home.hero.title\')')
             ->assertSee('Concepttitel');
+
+        $this->patchJson("/deyvo/pages/{$page->id}/fields", [
+            'field' => 'hero.unknown',
+            'value' => 'Mislukt',
+        ])->assertUnprocessable();
+
+        self::assertTrue(AuditLog::query()->where('event', 'page.field_update_failed')->exists());
 
         $this->post("/deyvo/pages/{$page->id}/preview/stop")
             ->assertRedirect('http://localhost/home');

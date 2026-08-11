@@ -6,8 +6,12 @@
 
 [data-deyvo-dashboard] {
     min-height: 100vh;
-    background: linear-gradient(135deg, #eff6ff 0%, #f8fbff 46%, #e0f2fe 100%);
+    background: var(--deyvo-dashboard-gradient, linear-gradient(135deg, #eff6ff 0%, #f8fbff 46%, #e0f2fe 100%)) !important;
     color: #172554;
+}
+
+[data-deyvo-dashboard-user] {
+    max-width: 16rem;
 }
 
 [data-deyvo-dashboard] > div > aside {
@@ -350,6 +354,12 @@ dialog[data-deyvo-modal]::backdrop,
 
 [data-deyvo-editor-overlay] .text-sky-700 {
     color: #2563eb;
+}
+
+[data-deyvo-editor-actor] {
+    color: #475569;
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 
 [data-deyvo-editor] {

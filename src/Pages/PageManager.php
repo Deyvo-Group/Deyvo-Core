@@ -7,6 +7,8 @@ namespace Deyvo\Core\Pages;
 use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
+use Deyvo\Core\Support\Actor;
+use Deyvo\Core\Support\AuditLogger;
 use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +21,8 @@ final class PageManager
 
     public function __construct(
         private DashboardManager $dashboard,
+        private Actor $actor,
+        private AuditLogger $audit,
     ) {
     }
 
@@ -71,13 +75,22 @@ final class PageManager
                 'sections' => $attributes['sections'],
                 'blocks' => $this->normaliseBlocks($attributes['blocks'] ?? [], $template),
                 'seo' => $attributes['seo'],
+                ...$this->actor->attributes('created_by'),
+                ...$this->actor->attributes('updated_by'),
             ]);
 
             $page->update([
                 'draft_revision_id' => $revision->getKey(),
             ]);
 
-            return $page->refresh();
+            $page = $page->refresh();
+            $this->audit->record('page.created', $page, [
+                'page_key' => $page->key,
+                'revision_id' => $revision->getKey(),
+                'revision_version' => $revision->version,
+            ]);
+
+            return $page;
         });
     }
 
@@ -97,8 +110,24 @@ final class PageManager
             }
 
             $attributes['blocks'] = $this->normaliseBlocks($attributes['blocks'] ?? $revision->blocks ?? [], $template);
-            $revision->update($attributes);
+            $revision->fill([
+                ...$attributes,
+                ...$this->actor->attributes('updated_by'),
+            ]);
+            $changes = array_values(array_diff(array_keys($revision->getDirty()), [
+                'updated_by_id',
+                'updated_by_name',
+                'updated_by_email',
+            ]));
+            $revision->save();
             $page->touch();
+
+            $this->audit->record('page.updated', $page, [
+                'page_key' => $page->key,
+                'revision_id' => $revision->getKey(),
+                'revision_version' => $revision->version,
+                'changes' => $changes,
+            ]);
 
             return $revision->refresh();
         });
@@ -122,6 +151,14 @@ final class PageManager
                 'published_revision_id' => $revision->getKey(),
                 'draft_revision_id' => null,
             ]);
+            $revision->update($this->actor->attributes('updated_by'));
+
+            $this->audit->record('page.published', $page, [
+                'page_key' => $page->key,
+                'revision_id' => $revision->getKey(),
+                'revision_version' => $revision->version,
+                'slug' => $revision->slug,
+            ]);
 
             return $revision->refresh();
         });
@@ -142,10 +179,20 @@ final class PageManager
                 'sections' => $revision->sections,
                 'blocks' => $revision->blocks ?? [],
                 'seo' => $revision->seo,
+                ...$this->actor->attributes('created_by'),
+                ...$this->actor->attributes('updated_by'),
             ]);
 
             $page->update([
                 'draft_revision_id' => $draft->getKey(),
+            ]);
+
+            $this->audit->record('page.restored', $page, [
+                'page_key' => $page->key,
+                'source_revision_id' => $revision->getKey(),
+                'source_revision_version' => $revision->version,
+                'revision_id' => $draft->getKey(),
+                'revision_version' => $draft->version,
             ]);
 
             return $draft;
@@ -178,8 +225,17 @@ final class PageManager
                 : ($validated['value'] ?? null);
             $revision->update([
                 'sections' => $sections,
+                ...$this->actor->attributes('updated_by'),
             ]);
             $page->touch();
+
+            $this->audit->record('page.field_updated', $page, [
+                'page_key' => $page->key,
+                'revision_id' => $revision->getKey(),
+                'revision_version' => $revision->version,
+                'field' => $path,
+                'type' => $field['type'],
+            ]);
 
             return [
                 'revision' => $revision->refresh(),
@@ -208,6 +264,8 @@ final class PageManager
             'sections' => $published->sections,
             'blocks' => $published->blocks ?? [],
             'seo' => $published->seo,
+            ...$this->actor->attributes('created_by'),
+            ...$this->actor->attributes('updated_by'),
         ]);
 
         $page->update([

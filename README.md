@@ -39,6 +39,26 @@ Core interface styles are enabled by default. A consuming website can opt out of
 
 Use `DEYVO_CORE_STYLES_ENABLED=false` for the same setting through the environment.
 
+## Dashboard Activity
+
+Core uses the authenticated user supplied by the host application. It does not add users, login or permissions itself. Dashboard changes, page revisions, previews and unexpected dashboard errors are written to `deyvo_audit_logs` with an actor snapshot, request-id, request path and structured context.
+
+Run `php artisan migrate` after updating Core. The dashboard exposes these records through **Activiteit**. Existing revisions remain available and show `Onbekend` until a new change is made.
+
+## Dashboard Gradient
+
+The dashboard keeps a blue Core gradient by default. Override it per website in `config/deyvo-core.php`.
+
+```php
+'ui' => [
+    'dashboard' => [
+        'gradient' => 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 48%, #cffafe 100%)',
+    ],
+],
+```
+
+Use `DEYVO_DASHBOARD_GRADIENT` for the same configuration through the environment. Set `DEYVO_AUDIT_ENABLED=false` only when activity registration must be disabled.
+
 ## Components
 
 ```blade

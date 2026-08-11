@@ -27,6 +27,7 @@
                             <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Pagina</th>
                             <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Slug</th>
                             <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Status</th>
+                            <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Gewijzigd door</th>
                             <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Laatste wijziging</th>
                             <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500">Acties</th>
                         </tr>
@@ -49,6 +50,7 @@
                                         <span class="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700">Leeg</span>
                                     @endif
                                 </td>
+                                <td class="px-5 py-4 text-sm text-neutral-600">{{ $revision?->updated_by_name ?? $revision?->updated_by_email ?? $revision?->created_by_name ?? $revision?->created_by_email ?? 'Onbekend' }}</td>
                                 <td class="px-5 py-4 text-sm text-neutral-600">{{ $revision?->updated_at?->format('d-m-Y H:i') }}</td>
                                 <td class="px-5 py-4">
                                     <div class="flex justify-end gap-4 text-sm font-medium">

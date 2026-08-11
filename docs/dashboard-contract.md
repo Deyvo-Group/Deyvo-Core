@@ -84,6 +84,36 @@ De aanvullende Core-styling staat standaard aan. Een website kan deze uitzetten 
 
 Of gebruik `DEYVO_CORE_STYLES_ENABLED=false` in het `.env`-bestand van de website.
 
+### Dashboardgradient
+
+Core geeft het dashboard standaard een blauwe gradient. Een website kan een eigen CSS-gradient meegeven. Wanneer deze ontbreekt, blijft de standaardgradient actief.
+
+~~~php
+'ui' => [
+    'dashboard' => [
+        'gradient' => 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 48%, #cffafe 100%)',
+    ],
+],
+~~~
+
+Gebruik `DEYVO_DASHBOARD_GRADIENT` voor dezelfde instelling in `.env`.
+
+### Activiteit en auteurs
+
+Core gebruikt uitsluitend de ingelogde gebruiker van de hostmiddleware. Core voegt geen users, login of permissies toe. De dashboardkop en editorbalk tonen de huidige gebruiker wanneer de host die levert.
+
+Nieuwe en bijgewerkte paginarevisies bewaren een snapshot van de maker en laatste bewerker. Core registreert daarnaast content-, instellingen-, pagina-, preview- en foutacties in `deyvo_audit_logs`. Iedere regel bevat de gebruiker, request-id, requestpad, IP-adres en context zonder instellingenwaarden op te slaan.
+
+De activiteitspagina staat standaard in de dashboardnavigatie. Schakel registratie alleen uit wanneer nodig.
+
+~~~php
+'audit' => [
+    'enabled' => false,
+],
+~~~
+
+Of gebruik `DEYVO_AUDIT_ENABLED=false` in `.env`. Voer na een Core-update altijd `php artisan migrate` uit voor de nieuwe audit- en auteurkolommen.
+
 ## Algemene instellingen
 
 Een item in pages verschijnt als een extra dashboardonderdeel.

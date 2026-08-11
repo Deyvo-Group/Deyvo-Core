@@ -5,6 +5,8 @@
 @php($appName = config('deyvo-core.name', config('app.name', 'Deyvo')))
 @php($navigation = app(\Deyvo\Core\Dashboard\DashboardManager::class)->navigation())
 @php($vite = config('deyvo-core.dashboard.vite', []))
+@php($actor = app(\Deyvo\Core\Support\Actor::class)->current())
+@php($gradient = config('deyvo-core.ui.dashboard.gradient'))
 
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-deyvo-core-styles="{{ config('deyvo-core.ui.styles.enabled', true) ? 'enabled' : 'disabled' }}">
@@ -16,7 +18,7 @@
         @vite($vite)
     @endif
 </head>
-<body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased" data-deyvo-dashboard>
+<body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased" data-deyvo-dashboard @if (is_string($gradient) && trim($gradient) !== '') style="--deyvo-dashboard-gradient: {{ $gradient }};" @endif>
     <div class="min-h-screen md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
         <aside class="hidden bg-neutral-950 px-4 py-5 text-neutral-200 md:block" data-deyvo-dashboard-sidebar>
             <a href="{{ route('deyvo.dashboard.index') }}" class="flex items-center gap-3 px-3 text-lg font-semibold text-white" data-deyvo-dashboard-brand>
@@ -55,7 +57,12 @@
                         @endforeach
                     </nav>
 
-                    <p class="ml-auto hidden text-sm text-neutral-500 sm:block">{{ config('deyvo-core.version') }}</p>
+                    <div class="ml-auto hidden min-w-0 text-right sm:block" data-deyvo-dashboard-user>
+                        <p class="text-xs font-medium text-neutral-500">Aangemeld als</p>
+                        <p class="truncate text-sm font-semibold text-neutral-950">{{ $actor['name'] ?? $actor['email'] ?? 'Onbekende gebruiker' }}</p>
+                    </div>
+
+                    <p class="hidden text-sm text-neutral-500 lg:block">{{ config('deyvo-core.version') }}</p>
                 </div>
             </header>
 
