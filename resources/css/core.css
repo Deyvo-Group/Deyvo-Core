@@ -311,6 +311,7 @@ dialog[data-deyvo-modal]::backdrop,
 }
 
 [data-deyvo-editor-overlay] {
+    inset: auto !important;
     position: fixed !important;
     top: 1rem !important;
     right: auto !important;
@@ -320,6 +321,7 @@ dialog[data-deyvo-modal]::backdrop,
     width: min(58rem, calc(100vw - 1.5rem)) !important;
     max-width: calc(100vw - 1.5rem) !important;
     margin: 0 !important;
+    translate: none !important;
     transform: translateX(-50%) !important;
     background: rgba(255, 255, 255, 0.68) !important;
     border-color: rgba(37, 99, 235, 0.24) !important;
