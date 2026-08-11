@@ -10,3 +10,10 @@ if (! function_exists('deyvo_content')) {
         return app(PageContent::class)->value($key, $default);
     }
 }
+
+if (! function_exists('deyvo_blocks')) {
+    function deyvo_blocks(string $pageKey): array
+    {
+        return app(PageContent::class)->blocks($pageKey);
+    }
+}

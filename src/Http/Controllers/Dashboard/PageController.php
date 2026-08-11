@@ -12,8 +12,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
+use JsonException;
 
 final class PageController
 {
@@ -40,13 +42,20 @@ final class PageController
         return view('deyvo::dashboard.pages.create', [
             'template' => $template,
             'templates' => $this->pages->templates(),
+            'blockTypes' => $this->pages->builderBlocks($template),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $attributes = $this->pageAttributes($request, true);
-        $page = $this->pages->create($attributes);
+
+        try {
+            $page = $this->pages->create($attributes);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withInput()->withErrors(['blocks' => $exception->getMessage()]);
+        }
+
         Flash::success('Pagina is als concept aangemaakt.');
 
         return redirect()->route('deyvo.dashboard.pages.edit', $page);
@@ -57,18 +66,25 @@ final class PageController
         $revision = $this->pages->draft($page);
 
         abort_unless($revision instanceof PageRevision, 404);
+        $template = $this->template($revision->template);
 
         return view('deyvo::dashboard.pages.edit', [
             'page' => $page,
             'revision' => $revision,
-            'template' => $this->template($revision->template),
+            'template' => $template,
             'templates' => $this->pages->templates(),
+            'blockTypes' => $this->pages->builderBlocks($template),
         ]);
     }
 
     public function update(Request $request, Page $page): RedirectResponse
     {
-        $revision = $this->pages->updateDraft($page, $this->pageAttributes($request));
+        try {
+            $this->pages->updateDraft($page, $this->pageAttributes($request));
+        } catch (InvalidArgumentException $exception) {
+            return back()->withInput()->withErrors(['blocks' => $exception->getMessage()]);
+        }
+
         Flash::success('Concept is opgeslagen.');
 
         return redirect()->route('deyvo.dashboard.pages.edit', $page);
@@ -123,8 +139,40 @@ final class PageController
         return [
             ...$attributes,
             'sections' => $this->sections($request, $template),
+            'blocks' => $this->blocks($request),
             'seo' => $this->seo($request),
         ];
+    }
+
+    private function blocks(Request $request): array
+    {
+        $value = $request->input('blocks', '[]');
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (! is_string($value)) {
+            throw ValidationException::withMessages([
+                'blocks' => 'De blokken moeten een geldige lijst zijn.',
+            ]);
+        }
+
+        try {
+            $blocks = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            throw ValidationException::withMessages([
+                'blocks' => 'De blokken kunnen niet worden gelezen.',
+            ]);
+        }
+
+        if (! is_array($blocks) || ! array_is_list($blocks)) {
+            throw ValidationException::withMessages([
+                'blocks' => 'De blokken moeten een lijst zijn.',
+            ]);
+        }
+
+        return $blocks;
     }
 
     private function template(?string $key): array

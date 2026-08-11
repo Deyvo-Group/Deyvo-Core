@@ -21,12 +21,13 @@ final class DashboardSchema
     private function __construct(
         private array $pages,
         private array $templates,
+        private array $blocks,
     ) {
     }
 
     public static function empty(): self
     {
-        return new self([], []);
+        return new self([], [], []);
     }
 
     public static function fromJson(string $json): self
@@ -76,6 +77,22 @@ final class DashboardSchema
         return null;
     }
 
+    public function blocks(): array
+    {
+        return $this->blocks;
+    }
+
+    public function block(string $key): ?array
+    {
+        foreach ($this->blocks as $block) {
+            if ($block['key'] === $key) {
+                return $block;
+            }
+        }
+
+        return null;
+    }
+
     private static function fromArray(array $definition): self
     {
         if (array_is_list($definition)) {
@@ -106,6 +123,30 @@ final class DashboardSchema
             $pages[] = $page;
         }
 
+        $blockDefinitions = $definition['blocks'] ?? [];
+
+        if (! is_array($blockDefinitions) || ! array_is_list($blockDefinitions)) {
+            throw new InvalidArgumentException('Deyvo dashboard schema blocks must be a JSON array.');
+        }
+
+        $blocks = [];
+        $blockKeys = [];
+
+        foreach ($blockDefinitions as $blockDefinition) {
+            if (! is_array($blockDefinition) || array_is_list($blockDefinition)) {
+                throw new InvalidArgumentException('Every Deyvo builder block must be a JSON object.');
+            }
+
+            $block = self::blockDefinition($blockDefinition);
+
+            if (in_array($block['key'], $blockKeys, true)) {
+                throw new InvalidArgumentException("Deyvo builder block key [{$block['key']}] is duplicated.");
+            }
+
+            $blockKeys[] = $block['key'];
+            $blocks[] = $block;
+        }
+
         $templateDefinitions = $definition['templates'] ?? [];
 
         if (! is_array($templateDefinitions) || ! array_is_list($templateDefinitions)) {
@@ -120,7 +161,7 @@ final class DashboardSchema
                 throw new InvalidArgumentException('Every Deyvo page template must be a JSON object.');
             }
 
-            $template = self::templateDefinition($templateDefinition);
+            $template = self::templateDefinition($templateDefinition, $blockKeys);
 
             if (in_array($template['key'], $templateKeys, true)) {
                 throw new InvalidArgumentException("Deyvo page template key [{$template['key']}] is duplicated.");
@@ -132,8 +173,9 @@ final class DashboardSchema
 
         usort($pages, static fn (array $left, array $right): int => $left['sort'] <=> $right['sort']);
         usort($templates, static fn (array $left, array $right): int => $left['sort'] <=> $right['sort']);
+        usort($blocks, static fn (array $left, array $right): int => [$left['category'], $left['label']] <=> [$right['category'], $right['label']]);
 
-        return new self($pages, $templates);
+        return new self($pages, $templates, $blocks);
     }
 
     private static function pageDefinition(array $definition): array
@@ -177,7 +219,7 @@ final class DashboardSchema
         ];
     }
 
-    private static function templateDefinition(array $definition): array
+    private static function templateDefinition(array $definition, array $blockKeys): array
     {
         $key = self::requiredString($definition['key'] ?? null, 'template key', 80);
 
@@ -185,10 +227,15 @@ final class DashboardSchema
             throw new InvalidArgumentException("Deyvo page template key [{$key}] is invalid.");
         }
 
-        $sections = $definition['sections'] ?? null;
+        $builder = self::builderDefinition($definition['builder'] ?? null, $key, $blockKeys);
+        $sections = $definition['sections'] ?? [];
 
-        if (! is_array($sections) || ! array_is_list($sections) || $sections === []) {
-            throw new InvalidArgumentException("Deyvo page template [{$key}] must define sections.");
+        if (! is_array($sections) || ! array_is_list($sections)) {
+            throw new InvalidArgumentException("Deyvo page template [{$key}] sections must be a JSON array.");
+        }
+
+        if ($sections === [] && ! $builder['enabled']) {
+            throw new InvalidArgumentException("Deyvo page template [{$key}] must define sections or enable the builder.");
         }
 
         $parsedSections = [];
@@ -215,6 +262,97 @@ final class DashboardSchema
             'description' => self::optionalString($definition['description'] ?? null, 'template description', 500),
             'sort' => self::sort($definition['sort'] ?? 100, 'template sort'),
             'sections' => $parsedSections,
+            'builder' => $builder,
+        ];
+    }
+
+    private static function blockDefinition(array $definition): array
+    {
+        $key = self::requiredString($definition['key'] ?? null, 'block key', 80);
+
+        if (preg_match('/^[a-z0-9][a-z0-9-]*$/', $key) !== 1) {
+            throw new InvalidArgumentException("Deyvo builder block key [{$key}] is invalid.");
+        }
+
+        $fields = $definition['fields'] ?? null;
+
+        if (! is_array($fields) || ! array_is_list($fields)) {
+            throw new InvalidArgumentException("Deyvo builder block [{$key}] fields must be a JSON array.");
+        }
+
+        $parsedFields = [];
+        $fieldKeys = [];
+
+        foreach ($fields as $field) {
+            if (! is_array($field) || array_is_list($field)) {
+                throw new InvalidArgumentException("Deyvo builder block [{$key}] contains an invalid field.");
+            }
+
+            $parsedField = self::templateFieldDefinition($field);
+
+            if (in_array($parsedField['key'], $fieldKeys, true)) {
+                throw new InvalidArgumentException("Deyvo builder block field key [{$parsedField['key']}] is duplicated.");
+            }
+
+            $fieldKeys[] = $parsedField['key'];
+            $parsedFields[] = $parsedField;
+        }
+
+        return [
+            'key' => $key,
+            'label' => self::requiredString($definition['label'] ?? null, 'block label', 120),
+            'description' => self::optionalString($definition['description'] ?? null, 'block description', 500),
+            'category' => self::optionalString($definition['category'] ?? null, 'block category', 80) ?? 'Algemeen',
+            'fields' => $parsedFields,
+        ];
+    }
+
+    private static function builderDefinition(mixed $definition, string $templateKey, array $blockKeys): array
+    {
+        if ($definition === null) {
+            return [
+                'enabled' => false,
+                'blocks' => [],
+            ];
+        }
+
+        if (! is_array($definition) || array_is_list($definition)) {
+            throw new InvalidArgumentException("Deyvo page template [{$templateKey}] builder must be a JSON object.");
+        }
+
+        $enabled = $definition['enabled'] ?? true;
+
+        if (! is_bool($enabled)) {
+            throw new InvalidArgumentException("Deyvo page template [{$templateKey}] builder enabled must be a boolean.");
+        }
+
+        $allowedBlocks = $definition['blocks'] ?? [];
+
+        if (! is_array($allowedBlocks) || ! array_is_list($allowedBlocks)) {
+            throw new InvalidArgumentException("Deyvo page template [{$templateKey}] builder blocks must be a JSON array.");
+        }
+
+        if ($enabled && $allowedBlocks === []) {
+            throw new InvalidArgumentException("Deyvo page template [{$templateKey}] builder must allow at least one block.");
+        }
+
+        $blocks = [];
+
+        foreach ($allowedBlocks as $blockKey) {
+            if (! is_string($blockKey) || ! in_array($blockKey, $blockKeys, true)) {
+                throw new InvalidArgumentException("Deyvo page template [{$templateKey}] references an unknown builder block.");
+            }
+
+            if (in_array($blockKey, $blocks, true)) {
+                throw new InvalidArgumentException("Deyvo page template [{$templateKey}] contains a duplicate builder block.");
+            }
+
+            $blocks[] = $blockKey;
+        }
+
+        return [
+            'enabled' => $enabled,
+            'blocks' => $blocks,
         ];
     }
 

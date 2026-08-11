@@ -1,4 +1,134 @@
 {
   "pages": [],
-  "templates": []
+  "blocks": [
+    {
+      "key": "hero",
+      "label": "Hero",
+      "description": "Een prominente opening voor de pagina.",
+      "category": "Introductie",
+      "fields": [
+        {
+          "key": "eyebrow",
+          "label": "Bovenregel",
+          "type": "text"
+        },
+        {
+          "key": "heading",
+          "label": "Titel",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "body",
+          "label": "Introductie",
+          "type": "textarea"
+        },
+        {
+          "key": "action_label",
+          "label": "Knoptekst",
+          "type": "text"
+        },
+        {
+          "key": "action_url",
+          "label": "Knoplink",
+          "type": "url"
+        }
+      ]
+    },
+    {
+      "key": "text",
+      "label": "Tekst",
+      "description": "Een inhoudssectie met kop en tekst.",
+      "category": "Inhoud",
+      "fields": [
+        {
+          "key": "heading",
+          "label": "Titel",
+          "type": "text"
+        },
+        {
+          "key": "body",
+          "label": "Tekst",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "quote",
+      "label": "Citaat",
+      "description": "Een uitgelichte quote met bron.",
+      "category": "Inhoud",
+      "fields": [
+        {
+          "key": "quote",
+          "label": "Citaat",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "author",
+          "label": "Bron",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "key": "call-to-action",
+      "label": "Oproep tot actie",
+      "description": "Een afsluitende sectie met een duidelijke actie.",
+      "category": "Conversie",
+      "fields": [
+        {
+          "key": "heading",
+          "label": "Titel",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "body",
+          "label": "Tekst",
+          "type": "textarea"
+        },
+        {
+          "key": "action_label",
+          "label": "Knoptekst",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "action_url",
+          "label": "Knoplink",
+          "type": "url",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "divider",
+      "label": "Scheiding",
+      "description": "Een rustige visuele scheiding tussen secties.",
+      "category": "Opmaak",
+      "fields": []
+    }
+  ],
+  "templates": [
+    {
+      "key": "standard-page",
+      "label": "Standaardpagina",
+      "description": "Een flexibele pagina die je met blokken opbouwt.",
+      "sort": 10,
+      "builder": {
+        "enabled": true,
+        "blocks": [
+          "hero",
+          "text",
+          "quote",
+          "call-to-action",
+          "divider"
+        ]
+      },
+      "sections": []
+    }
+  ]
 }

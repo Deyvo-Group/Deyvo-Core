@@ -30,6 +30,13 @@
         </div>
     </div>
 
+    @if ($template['builder']['enabled'])
+        @include('deyvo::dashboard.pages.builder', [
+            'revision' => $revision,
+            'blockTypes' => $blockTypes,
+        ])
+    @endif
+
     @foreach ($template['sections'] as $section)
         <section class="border border-neutral-200 bg-white p-5 shadow-sm">
             <div>

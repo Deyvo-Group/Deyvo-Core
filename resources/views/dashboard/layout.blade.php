@@ -4,6 +4,7 @@
 
 @php($appName = config('deyvo-core.name', config('app.name', 'Deyvo')))
 @php($navigation = app(\Deyvo\Core\Dashboard\DashboardManager::class)->navigation())
+@php($vite = config('deyvo-core.dashboard.vite', []))
 
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -11,6 +12,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }} | {{ $appName }}</title>
+    @if (is_array($vite) && $vite !== [])
+        @vite($vite)
+    @endif
 </head>
 <body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased">
     <div class="min-h-screen md:grid md:grid-cols-[16rem_minmax(0,1fr)]">

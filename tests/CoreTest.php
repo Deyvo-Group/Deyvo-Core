@@ -365,4 +365,98 @@ final class CoreTest extends TestCase
         $this->blade('@deyvoEditable(\'home.hero.title\')')
             ->assertSee('Concepttitel');
     }
+
+    public function test_page_builder_stores_publishes_and_renders_configured_blocks(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'blocks' => [
+                [
+                    'key' => 'hero',
+                    'label' => 'Hero',
+                    'category' => 'Introductie',
+                    'fields' => [
+                        [
+                            'key' => 'heading',
+                            'label' => 'Titel',
+                            'type' => 'text',
+                            'required' => true,
+                        ],
+                        [
+                            'key' => 'body',
+                            'label' => 'Introductie',
+                            'type' => 'textarea',
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'text',
+                    'label' => 'Tekst',
+                    'category' => 'Inhoud',
+                    'fields' => [
+                        [
+                            'key' => 'body',
+                            'label' => 'Tekst',
+                            'type' => 'textarea',
+                            'required' => true,
+                        ],
+                    ],
+                ],
+            ],
+            'templates' => [
+                [
+                    'key' => 'builder',
+                    'label' => 'Builderpagina',
+                    'builder' => [
+                        'blocks' => ['hero', 'text'],
+                    ],
+                    'sections' => [],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->get('/deyvo/pages/create?template=builder')
+            ->assertOk()
+            ->assertSee('Blokken')
+            ->assertSee('data-deyvo-builder', false);
+
+        $this->post('/deyvo/pages', [
+            'title' => 'Over Deyvo',
+            'slug' => 'over-deyvo',
+            'template' => 'builder',
+            'blocks' => json_encode([
+                [
+                    'id' => 'block-hero',
+                    'type' => 'hero',
+                    'data' => [
+                        'heading' => 'Bouw met blokken',
+                        'body' => 'Maak elke pagina op maat.',
+                    ],
+                ],
+                [
+                    'id' => 'block-text',
+                    'type' => 'text',
+                    'data' => [
+                        'body' => 'Deyvo Core bewaart ieder concept als revisie.',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+            'seo' => [
+                'indexable' => '1',
+            ],
+        ])->assertRedirect();
+
+        $page = Page::query()->firstOrFail();
+        $revision = $page->draftRevision()->firstOrFail();
+
+        self::assertSame('hero', $revision->blocks[0]['type']);
+        self::assertSame('Bouw met blokken', $revision->blocks[0]['data']['heading']);
+        self::assertSame('text', $revision->blocks[1]['type']);
+
+        app(PageManager::class)->publish($page);
+
+        $this->blade('<x-deyvo::blocks page="over-deyvo" />')
+            ->assertSee('Bouw met blokken')
+            ->assertSee('Deyvo Core bewaart ieder concept als revisie.');
+    }
 }
