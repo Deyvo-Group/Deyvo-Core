@@ -1,0 +1,24 @@
+<?php
+
+declare(strict_types=1);
+
+use Deyvo\Core\Http\Controllers\Dashboard\PageController;
+use Deyvo\Core\Http\Controllers\Dashboard\PageFieldController;
+use Deyvo\Core\Http\Controllers\Dashboard\PagePreviewController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
+    ->middleware(config('deyvo-core.dashboard.middleware', ['web', 'auth']))
+    ->as('deyvo.dashboard.pages.')
+    ->group(function (): void {
+        Route::get('pages', [PageController::class, 'index'])->name('index');
+        Route::get('pages/create', [PageController::class, 'create'])->name('create');
+        Route::post('pages', [PageController::class, 'store'])->name('store');
+        Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('edit');
+        Route::put('pages/{page}', [PageController::class, 'update'])->name('update');
+        Route::post('pages/{page}/publish', [PageController::class, 'publish'])->name('publish');
+        Route::get('pages/{page}/preview', PagePreviewController::class)->name('preview');
+        Route::patch('pages/{page}/fields', [PageFieldController::class, 'update'])->name('fields.update');
+        Route::get('pages/{page}/revisions', [PageController::class, 'revisions'])->name('revisions');
+        Route::post('pages/{page}/revisions/{revision}/restore', [PageController::class, 'restore'])->name('revisions.restore');
+    });

@@ -1,0 +1,218 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Deyvo\Core\Http\Controllers\Dashboard;
+
+use Deyvo\Core\Models\Page;
+use Deyvo\Core\Models\PageRevision;
+use Deyvo\Core\Pages\PageManager;
+use Deyvo\Core\Support\Flash;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use InvalidArgumentException;
+
+final class PageController
+{
+    public function __construct(
+        private PageManager $pages,
+    ) {
+    }
+
+    public function index(): View
+    {
+        return view('deyvo::dashboard.pages.index', [
+            'pages' => Page::query()
+                ->with(['publishedRevision', 'draftRevision'])
+                ->latest('updated_at')
+                ->paginate(15),
+            'hasTemplates' => $this->pages->templates() !== [],
+        ]);
+    }
+
+    public function create(Request $request): View
+    {
+        $template = $this->template($request->query('template'));
+
+        return view('deyvo::dashboard.pages.create', [
+            'template' => $template,
+            'templates' => $this->pages->templates(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $attributes = $this->pageAttributes($request, true);
+        $page = $this->pages->create($attributes);
+        Flash::success('Pagina is als concept aangemaakt.');
+
+        return redirect()->route('deyvo.dashboard.pages.edit', $page);
+    }
+
+    public function edit(Page $page): View
+    {
+        $revision = $this->pages->draft($page);
+
+        abort_unless($revision instanceof PageRevision, 404);
+
+        return view('deyvo::dashboard.pages.edit', [
+            'page' => $page,
+            'revision' => $revision,
+            'template' => $this->template($revision->template),
+            'templates' => $this->pages->templates(),
+        ]);
+    }
+
+    public function update(Request $request, Page $page): RedirectResponse
+    {
+        $revision = $this->pages->updateDraft($page, $this->pageAttributes($request));
+        Flash::success('Concept is opgeslagen.');
+
+        return redirect()->route('deyvo.dashboard.pages.edit', $page);
+    }
+
+    public function publish(Page $page): RedirectResponse
+    {
+        try {
+            $this->pages->publish($page);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['slug' => $exception->getMessage()]);
+        }
+
+        Flash::success('Pagina is gepubliceerd.');
+
+        return redirect()->route('deyvo.dashboard.pages.edit', $page);
+    }
+
+    public function revisions(Page $page): View
+    {
+        return view('deyvo::dashboard.pages.revisions', [
+            'page' => $page,
+            'revisions' => $page->revisions()->latest('version')->paginate(15),
+        ]);
+    }
+
+    public function restore(Page $page, PageRevision $revision): RedirectResponse
+    {
+        $this->pages->restore($page, $revision);
+        Flash::success('Revisie is als concept hersteld.');
+
+        return redirect()->route('deyvo.dashboard.pages.edit', $page);
+    }
+
+    private function pageAttributes(Request $request, bool $creating = false): array
+    {
+        $templates = $this->pages->templates();
+        $templateKeys = array_column($templates, 'key');
+        $rules = [
+            'title' => ['required', 'string', 'max:160'],
+            'slug' => ['required', 'string', 'max:160', 'regex:/^[a-z0-9][a-z0-9-]*$/'],
+            'template' => ['required', 'string', Rule::in($templateKeys)],
+        ];
+
+        if ($creating) {
+            $rules['slug'][] = Rule::unique('deyvo_pages', 'key');
+        }
+
+        $attributes = Validator::validate($request->all(), $rules);
+        $template = $this->template($attributes['template']);
+
+        return [
+            ...$attributes,
+            'sections' => $this->sections($request, $template),
+            'seo' => $this->seo($request),
+        ];
+    }
+
+    private function template(?string $key): array
+    {
+        $templates = $this->pages->templates();
+        $template = $key === null || $key === ''
+            ? ($templates[0] ?? null)
+            : $this->pages->template($key);
+
+        abort_unless(is_array($template), 404);
+
+        return $template;
+    }
+
+    private function sections(Request $request, array $template): array
+    {
+        $rules = [];
+
+        foreach ($template['sections'] as $section) {
+            foreach ($section['fields'] as $field) {
+                $rules["sections.{$section['key']}.{$field['key']}"] = $this->rules($field);
+            }
+        }
+
+        $validated = Validator::validate($request->all(), $rules);
+        $sections = [];
+
+        foreach ($template['sections'] as $section) {
+            foreach ($section['fields'] as $field) {
+                $path = "{$section['key']}.{$field['key']}";
+                $sections[$section['key']][$field['key']] = $field['type'] === 'boolean'
+                    ? $request->boolean("sections.{$path}")
+                    : data_get($validated, "sections.{$path}");
+            }
+        }
+
+        return $sections;
+    }
+
+    private function seo(Request $request): array
+    {
+        $validated = Validator::validate($request->all(), [
+            'seo.title' => ['nullable', 'string', 'max:160'],
+            'seo.description' => ['nullable', 'string', 'max:500'],
+            'seo.indexable' => ['nullable', 'boolean'],
+        ]);
+
+        return [
+            'title' => data_get($validated, 'seo.title'),
+            'description' => data_get($validated, 'seo.description'),
+            'indexable' => $request->boolean('seo.indexable'),
+        ];
+    }
+
+    private function rules(array $field): array
+    {
+        $rules = [$field['required'] ? 'required' : 'nullable'];
+
+        if ($field['type'] === 'boolean') {
+            $rules[] = 'boolean';
+
+            return $rules;
+        }
+
+        $rules[] = 'string';
+
+        if ($field['type'] === 'email') {
+            $rules[] = 'email';
+            $rules[] = 'max:255';
+
+            return $rules;
+        }
+
+        if ($field['type'] === 'url') {
+            $rules[] = 'url';
+            $rules[] = 'max:2048';
+
+            return $rules;
+        }
+
+        if ($field['type'] === 'select') {
+            $rules[] = Rule::in(array_column($field['options'], 'value'));
+
+            return $rules;
+        }
+
+        $rules[] = 'max:65535';
+
+        return $rules;
+    }
+}

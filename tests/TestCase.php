@@ -22,6 +22,9 @@ abstract class TestCase extends Orchestra
             'enabled' => true,
             'path' => 'deyvo',
             'middleware' => ['web'],
+            'pages' => [
+                'enabled' => true,
+            ],
             'navigation' => [
                 [
                     'label' => 'Overzicht',

@@ -8,6 +8,7 @@ use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\LocaleMiddleware;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Http\Middleware\SecurityHeadersMiddleware;
+use Deyvo\Core\Pages\PageManager;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Maintenance;
 use Illuminate\Routing\Router;
@@ -19,6 +20,7 @@ class CoreServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(DashboardManager::class);
+        $this->app->singleton(PageManager::class);
 
         $this->mergeConfigFrom(
             __DIR__.'/../../config/core.php',
@@ -40,6 +42,8 @@ class CoreServiceProvider extends ServiceProvider
 
         Blade::if('deyvoFeature', static fn (string $name): bool => Feature::enabled($name));
         Blade::if('deyvoMaintenance', static fn (): bool => Maintenance::active());
+        Blade::directive('deyvoEditable', static fn (string $expression): string => "<?php echo app(\\Deyvo\\Core\\Pages\\PageContent::class)->editable({$expression}); ?>");
+        Blade::directive('deyvoEditor', static fn (): string => '<?php echo app(\\Deyvo\\Core\\Pages\\PageContent::class)->editor(); ?>');
 
         $this->app->booted(function () use ($router): void {
             $this->registerMiddleware($router);
@@ -52,6 +56,10 @@ class CoreServiceProvider extends ServiceProvider
         if (config('deyvo-core.dashboard.enabled', false)) {
             $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
             $this->loadRoutesFrom(__DIR__.'/../../routes/dashboard.php');
+
+            if (config('deyvo-core.dashboard.pages.enabled', false)) {
+                $this->loadRoutesFrom(__DIR__.'/../../routes/pages.php');
+            }
         }
 
         $this->publishes([

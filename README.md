@@ -168,6 +168,75 @@ For generated JSON, the host application can register the schema during boot.
         (string) file_get_contents(resource_path('deyvo/dashboard.json')),
     );
 
+## Page Editor
+
+Enable the page editor in the host configuration and run the package migrations.
+
+    'dashboard' => [
+        'pages' => [
+            'enabled' => true,
+        ],
+    ],
+
+    php artisan migrate
+
+Add page templates to the same JSON schema. Each template has sections and typed fields. Pages preserve every saved version as a revision. A saved draft is never visible to visitors until it is published.
+
+    {
+      "pages": [],
+      "templates": [
+        {
+          "key": "landing",
+          "label": "Landingspagina",
+          "sort": 10,
+          "sections": [
+            {
+              "key": "hero",
+              "label": "Hero",
+              "fields": [
+                {
+                  "key": "title",
+                  "label": "Titel",
+                  "type": "text",
+                  "required": true
+                },
+                {
+                  "key": "intro",
+                  "label": "Introductie",
+                  "type": "textarea"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+The dashboard preview redirects to the real website. Register a resolver when the host route does not map directly to the page slug.
+
+    use Deyvo\Core\Models\Page;
+    use Deyvo\Core\Models\PageRevision;
+    use Deyvo\Core\Pages\PageManager;
+
+    app(PageManager::class)->registerPreviewUrlResolver(
+        static fn (Page $page, PageRevision $revision): string => route('pages.show', $revision->slug),
+    );
+
+Use deyvo_content in public Blade views for a published page value with a fallback.
+
+    <p>{{ deyvo_content('home.hero.intro', 'Bestaande introductie') }}</p>
+
+Use deyvoEditable for inline preview markers. Visitors receive only the escaped published value. A dashboard preview receives an escaped field marker with edit metadata.
+
+    <h1>@deyvoEditable('home.hero.title')</h1>
+
+Add deyvoEditor once near the end of the host layout and include the Core JavaScript entry. The host layout needs a standard CSRF meta tag.
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @deyvoEditor
+
+The inline editor supports the schema field types text, textarea, email, url, select, and boolean. It saves concepts through the authenticated dashboard route. Rich text, media, menus, and legacy-data import are intentionally separate modules or migration work.
+
 ## Maintenance
 
 Use the package maintenance view with Laravel's built-in maintenance mode.
