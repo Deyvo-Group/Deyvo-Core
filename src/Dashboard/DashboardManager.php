@@ -43,6 +43,15 @@ final class DashboardManager
             ];
         }
 
+        if (config('deyvo-core.audit.enabled', true)) {
+            $navigation[] = [
+                'label' => 'Activiteit',
+                'route' => 'deyvo.dashboard.activity.index',
+                'active' => 'deyvo.dashboard.activity.*',
+                'sort' => 35,
+            ];
+        }
+
         foreach ($this->customPages() as $page) {
             $navigation[] = [
                 'label' => $page['label'],

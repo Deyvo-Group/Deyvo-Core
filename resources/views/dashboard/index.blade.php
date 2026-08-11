@@ -4,6 +4,7 @@
             <p class="text-sm font-medium text-sky-700">{{ config('deyvo-core.name') }}</p>
             <h1 class="mt-1 text-2xl font-semibold text-neutral-950">Overzicht</h1>
             <p class="mt-2 text-sm text-neutral-600">Beheer de gedeelde content en instellingen van deze website.</p>
+            <p class="mt-3 text-sm text-neutral-600">Aangemeld als <span class="font-medium text-neutral-950">{{ $actor['name'] ?? $actor['email'] ?? 'Onbekende gebruiker' }}</span>.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -62,4 +63,44 @@
             </section>
         @endif
     </div>
+
+    @if (config('deyvo-core.audit.enabled', true))
+        <section class="mt-10 border-t border-neutral-300 pt-5">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-semibold text-neutral-950">Recente activiteit</h2>
+                    <p class="mt-1 text-sm text-neutral-600">Wijzigingen, previews en foutmeldingen binnen Core.</p>
+                </div>
+
+                <a href="{{ route('deyvo.dashboard.activity.index') }}" class="text-sm font-medium text-sky-700 hover:text-sky-900">Alle activiteit</a>
+            </div>
+
+            @if ($recentActivities->isEmpty())
+                <p class="mt-5 text-sm text-neutral-600">Er is nog geen activiteit geregistreerd.</p>
+            @else
+                <div class="mt-5 overflow-x-auto border border-neutral-200 bg-white shadow-sm">
+                    <table class="min-w-full divide-y divide-neutral-200 text-left text-sm">
+                        <thead class="bg-neutral-50 text-xs font-medium uppercase text-neutral-500">
+                            <tr>
+                                <th class="px-5 py-3">Activiteit</th>
+                                <th class="px-5 py-3">Door</th>
+                                <th class="px-5 py-3">Moment</th>
+                                <th class="px-5 py-3"><span class="sr-only">Details</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-200">
+                            @foreach ($recentActivities as $activity)
+                                <tr>
+                                    <td class="px-5 py-4"><p class="font-medium text-neutral-950">{{ $activity->eventLabel() }}</p><p class="mt-1 text-xs text-neutral-500">{{ $activity->subject_label ?? 'Dashboard' }}</p></td>
+                                    <td class="px-5 py-4 text-neutral-600">{{ $activity->actorLabel() }}</td>
+                                    <td class="whitespace-nowrap px-5 py-4 text-neutral-600">{{ $activity->created_at->diffForHumans() }}</td>
+                                    <td class="px-5 py-4 text-right"><a href="{{ route('deyvo.dashboard.activity.show', $activity) }}" class="text-sm font-medium text-sky-700 hover:text-sky-900">Details</a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </section>
+    @endif
 @endcomponent

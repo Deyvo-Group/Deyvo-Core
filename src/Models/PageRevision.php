@@ -20,6 +20,12 @@ final class PageRevision extends Model
         'sections',
         'blocks',
         'seo',
+        'created_by_id',
+        'created_by_name',
+        'created_by_email',
+        'updated_by_id',
+        'updated_by_name',
+        'updated_by_email',
     ];
 
     protected function casts(): array

@@ -3,16 +3,21 @@
 declare(strict_types=1);
 
 use Deyvo\Core\Http\Controllers\Dashboard\ContentController;
+use Deyvo\Core\Http\Controllers\Dashboard\ActivityLogController;
 use Deyvo\Core\Http\Controllers\Dashboard\CustomPageController;
 use Deyvo\Core\Http\Controllers\Dashboard\DashboardController;
 use Deyvo\Core\Http\Controllers\Dashboard\SettingController;
+use Deyvo\Core\Http\Middleware\AuditDashboardFailuresMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
-    ->middleware(config('deyvo-core.dashboard.middleware', ['web', 'auth']))
+    ->middleware([...config('deyvo-core.dashboard.middleware', ['web', 'auth']), AuditDashboardFailuresMiddleware::class])
     ->as('deyvo.dashboard.')
     ->group(function (): void {
         Route::get('/', DashboardController::class)->name('index');
+
+        Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
+        Route::get('activity/{activity}', [ActivityLogController::class, 'show'])->name('activity.show');
 
         Route::get('content', [ContentController::class, 'index'])->name('contents.index');
         Route::get('content/create', [ContentController::class, 'create'])->name('contents.create');

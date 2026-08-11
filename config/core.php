@@ -13,6 +13,13 @@ return [
         'styles' => [
             'enabled' => env('DEYVO_CORE_STYLES_ENABLED', true),
         ],
+        'dashboard' => [
+            'gradient' => env('DEYVO_DASHBOARD_GRADIENT', 'linear-gradient(135deg, #eff6ff 0%, #f8fbff 46%, #e0f2fe 100%)'),
+        ],
+    ],
+
+    'audit' => [
+        'enabled' => env('DEYVO_AUDIT_ENABLED', true),
     ],
 
     'features' => [],

@@ -9,6 +9,8 @@ use Deyvo\Core\Http\Middleware\LocaleMiddleware;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Http\Middleware\SecurityHeadersMiddleware;
 use Deyvo\Core\Pages\PageManager;
+use Deyvo\Core\Support\Actor;
+use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Maintenance;
 use Illuminate\Routing\Router;
@@ -21,6 +23,8 @@ class CoreServiceProvider extends ServiceProvider
     {
         $this->app->singleton(DashboardManager::class);
         $this->app->singleton(PageManager::class);
+        $this->app->singleton(Actor::class);
+        $this->app->singleton(AuditLogger::class);
 
         $this->mergeConfigFrom(
             __DIR__.'/../../config/core.php',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Deyvo\Core\Http\Controllers\Dashboard;
 
 use Deyvo\Core\Models\Content;
+use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,11 @@ use Illuminate\Validation\Rule;
 
 final class ContentController
 {
+    public function __construct(
+        private AuditLogger $audit,
+    ) {
+    }
+
     public function index(): View
     {
         return view('deyvo::dashboard.contents.index', [
@@ -28,7 +34,11 @@ final class ContentController
 
     public function store(Request $request): RedirectResponse
     {
-        Content::query()->create($this->validated($request));
+        $content = Content::query()->create($this->validated($request));
+        $this->audit->record('content.created', $content, [
+            'key' => $content->key,
+            'published' => $content->is_published,
+        ]);
         Flash::success('Content is opgeslagen.');
 
         return redirect()->route('deyvo.dashboard.contents.index');
@@ -43,7 +53,14 @@ final class ContentController
 
     public function update(Request $request, Content $content): RedirectResponse
     {
-        $content->update($this->validated($request, $content));
+        $content->fill($this->validated($request, $content));
+        $changes = array_keys($content->getDirty());
+        $content->save();
+        $this->audit->record('content.updated', $content, [
+            'key' => $content->key,
+            'changes' => $changes,
+            'published' => $content->is_published,
+        ]);
         Flash::success('Content is bijgewerkt.');
 
         return redirect()->route('deyvo.dashboard.contents.index');
@@ -52,6 +69,9 @@ final class ContentController
     public function destroy(Content $content): RedirectResponse
     {
         $content->delete();
+        $this->audit->record('content.deleted', $content, [
+            'key' => $content->key,
+        ]);
         Flash::success('Content is verwijderd.');
 
         return redirect()->route('deyvo.dashboard.contents.index');

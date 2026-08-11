@@ -7,6 +7,7 @@ namespace Deyvo\Core\Http\Controllers\Dashboard;
 use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Models\Content;
 use Deyvo\Core\Models\Setting;
+use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ final class CustomPageController
 {
     public function __construct(
         private DashboardManager $dashboard,
+        private AuditLogger $audit,
     ) {
     }
 
@@ -35,8 +37,10 @@ final class CustomPageController
     {
         $definition = $this->page($page);
         $values = $this->validated($request, $definition);
+        $fields = [];
 
         foreach ($definition['fields'] as $index => $field) {
+            $fields[] = $field['key'];
             $value = $field['type'] === 'boolean'
                 ? $request->boolean("values.{$index}")
                 : ($values[$index] ?? null);
@@ -59,6 +63,12 @@ final class CustomPageController
                 ['value' => $value],
             );
         }
+
+        $this->audit->record('custom.updated', null, [
+            'subject_label' => $definition['label'],
+            'page' => $definition['key'],
+            'fields' => $fields,
+        ]);
 
         Flash::success('Instellingen zijn bijgewerkt.');
 

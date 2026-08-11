@@ -5,10 +5,11 @@ declare(strict_types=1);
 use Deyvo\Core\Http\Controllers\Dashboard\PageController;
 use Deyvo\Core\Http\Controllers\Dashboard\PageFieldController;
 use Deyvo\Core\Http\Controllers\Dashboard\PagePreviewController;
+use Deyvo\Core\Http\Middleware\AuditDashboardFailuresMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
-    ->middleware(config('deyvo-core.dashboard.middleware', ['web', 'auth']))
+    ->middleware([...config('deyvo-core.dashboard.middleware', ['web', 'auth']), AuditDashboardFailuresMiddleware::class])
     ->as('deyvo.dashboard.pages.')
     ->group(function (): void {
         Route::get('pages', [PageController::class, 'index'])->name('index');

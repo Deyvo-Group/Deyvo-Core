@@ -16,6 +16,7 @@
                         <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Versie</th>
                         <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Titel</th>
                         <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Slug</th>
+                        <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Gewijzigd door</th>
                         <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Gewijzigd</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500">Actie</th>
                     </tr>
@@ -26,6 +27,7 @@
                             <td class="px-5 py-4 text-sm font-medium text-neutral-950">v{{ $revision->version }}</td>
                             <td class="px-5 py-4 text-sm text-neutral-600">{{ $revision->title }}</td>
                             <td class="px-5 py-4 text-sm text-neutral-600">/{{ $revision->slug }}</td>
+                            <td class="px-5 py-4 text-sm text-neutral-600">{{ $revision->updated_by_name ?? $revision->updated_by_email ?? $revision->created_by_name ?? $revision->created_by_email ?? 'Onbekend' }}</td>
                             <td class="px-5 py-4 text-sm text-neutral-600">{{ $revision->updated_at->format('d-m-Y H:i') }}</td>
                             <td class="px-5 py-4 text-right">
                                 <form method="POST" action="{{ route('deyvo.dashboard.pages.revisions.restore', [$page, $revision]) }}">
