@@ -63,8 +63,28 @@ document.addEventListener('click', (event) => {
 
 const editorOverlay = document.querySelector('[data-deyvo-editor-overlay]');
 
-if (editorOverlay instanceof HTMLElement && editorOverlay.parentElement !== document.body) {
-  document.body.append(editorOverlay);
+const centreEditorOverlay = () => {
+  if (!(editorOverlay instanceof HTMLElement)) {
+    return;
+  }
+
+  editorOverlay.style.setProperty('inset', 'auto', 'important');
+  editorOverlay.style.setProperty('position', 'fixed', 'important');
+  editorOverlay.style.setProperty('top', '16px', 'important');
+  editorOverlay.style.setProperty('right', 'auto', 'important');
+  editorOverlay.style.setProperty('bottom', 'auto', 'important');
+  editorOverlay.style.setProperty('left', '50vw', 'important');
+  editorOverlay.style.setProperty('translate', 'none', 'important');
+  editorOverlay.style.setProperty('transform', 'translateX(-50%)', 'important');
+};
+
+if (editorOverlay instanceof HTMLElement) {
+  if (editorOverlay.parentElement !== document.body) {
+    document.body.append(editorOverlay);
+  }
+
+  centreEditorOverlay();
+  window.addEventListener('resize', centreEditorOverlay);
 }
 
 const editor = document.querySelector('[data-deyvo-editor]');
@@ -221,9 +241,11 @@ if (editor instanceof HTMLElement) {
     const field = event.target.closest('[data-deyvo-field]');
 
     if (field instanceof HTMLElement) {
+      event.preventDefault();
+      event.stopPropagation();
       open(field);
     }
-  });
+  }, true);
 }
 
 const builder = document.querySelector('[data-deyvo-builder]');
