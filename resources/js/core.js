@@ -46,6 +46,7 @@ const editor = document.querySelector('[data-deyvo-editor]');
 
 if (editor instanceof HTMLElement) {
   let pendingSave;
+  const editorStatus = document.querySelector('[data-deyvo-editor-status]');
 
   const save = async (field, control, status) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -54,6 +55,7 @@ if (editor instanceof HTMLElement) {
       : control.value;
 
     status.textContent = 'Opslaan...';
+    editorStatus?.replaceChildren('Opslaan...');
 
     const response = await fetch(field.dataset.deyvoUrl ?? '', {
       method: 'PATCH',
@@ -70,6 +72,7 @@ if (editor instanceof HTMLElement) {
 
     if (!response.ok) {
       status.textContent = 'Opslaan mislukt';
+      editorStatus?.replaceChildren('Opslaan mislukt');
       return;
     }
 
@@ -84,6 +87,7 @@ if (editor instanceof HTMLElement) {
     });
 
     status.textContent = 'Opgeslagen';
+    editorStatus?.replaceChildren(`Concept v${payload.revision}`);
   };
 
   const open = (field) => {
@@ -143,6 +147,7 @@ if (editor instanceof HTMLElement) {
       pendingSave = setTimeout(() => {
         save(field, control, status).catch(() => {
           status.textContent = 'Opslaan mislukt';
+          editorStatus?.replaceChildren('Opslaan mislukt');
         });
       }, type === 'select' || type === 'boolean' ? 0 : 500);
     });

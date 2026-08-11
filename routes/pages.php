@@ -18,6 +18,7 @@ Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
         Route::put('pages/{page}', [PageController::class, 'update'])->name('update');
         Route::post('pages/{page}/publish', [PageController::class, 'publish'])->name('publish');
         Route::get('pages/{page}/preview', PagePreviewController::class)->name('preview');
+        Route::post('pages/{page}/preview/stop', [PagePreviewController::class, 'stop'])->name('preview.stop');
         Route::patch('pages/{page}/fields', [PageFieldController::class, 'update'])->name('fields.update');
         Route::get('pages/{page}/revisions', [PageController::class, 'revisions'])->name('revisions');
         Route::post('pages/{page}/revisions/{revision}/restore', [PageController::class, 'restore'])->name('revisions.restore');

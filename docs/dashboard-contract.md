@@ -331,6 +331,7 @@ Alle routes gebruiken dashboard.path en dashboard.middleware.
 | PUT | /dashboard/pages/{page} | deyvo.dashboard.pages.update | Slaat concept op. |
 | POST | /dashboard/pages/{page}/publish | deyvo.dashboard.pages.publish | Publiceert huidig concept. |
 | GET | /dashboard/pages/{page}/preview | deyvo.dashboard.pages.preview | Start previewsessie en leidt naar de hostlayout. |
+| POST | /dashboard/pages/{page}/preview/stop | deyvo.dashboard.pages.preview.stop | Stopt previewsessie en leidt naar de live pagina. |
 | PATCH | /dashboard/pages/{page}/fields | deyvo.dashboard.pages.fields.update | Autosave voor live editor. |
 | GET | /dashboard/pages/{page}/revisions | deyvo.dashboard.pages.revisions | Revisiehistorie. |
 | POST | /dashboard/pages/{page}/revisions/{revision}/restore | deyvo.dashboard.pages.revisions.restore | Herstelt revisie als nieuw concept. |
@@ -370,6 +371,8 @@ De hostlayout moet een CSRF-token bevatten en de Core-JavaScript importeren.
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @deyvoEditor
 ~~~
+
+Tijdens een actieve preview rendert deyvoEditor een vaste editoroverlay. Deze toont dat de editor actief is, de paginatitel, het pad, de conceptversie en de actuele opslagstatus. De overlay bevat ook een Dashboard-link en een actie om de editor te verlaten. Bezoekers zien deze overlay nooit.
 
 ~~~js
 import '../../vendor/deyvo/core/resources/js/core.js';
