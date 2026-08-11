@@ -34,6 +34,15 @@ final class DashboardManager
         $navigation = config('deyvo-core.dashboard.navigation', []);
         $navigation = is_array($navigation) ? [...$navigation, ...$this->navigation] : $this->navigation;
 
+        if (config('deyvo-core.dashboard.pages.enabled', false)) {
+            $navigation[] = [
+                'label' => 'Pagina’s',
+                'route' => 'deyvo.dashboard.pages.index',
+                'active' => 'deyvo.dashboard.pages.*',
+                'sort' => 15,
+            ];
+        }
+
         foreach ($this->customPages() as $page) {
             $navigation[] = [
                 'label' => $page['label'],
@@ -58,6 +67,16 @@ final class DashboardManager
     public function page(string $key): ?array
     {
         return $this->schema()->page($key);
+    }
+
+    public function pageTemplates(): array
+    {
+        return $this->schema()->templates();
+    }
+
+    public function pageTemplate(string $key): ?array
+    {
+        return $this->schema()->template($key);
     }
 
     public function values(array $page): array

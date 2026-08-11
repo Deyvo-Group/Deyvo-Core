@@ -7,7 +7,10 @@ namespace Deyvo\Core\Tests;
 use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Models\Content;
+use Deyvo\Core\Models\Page;
+use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Models\Setting;
+use Deyvo\Core\Pages\PageManager;
 use Deyvo\Core\Support\SiteContent;
 use Deyvo\Core\Support\SiteSettings;
 use Deyvo\Core\Support\Feature;
@@ -212,5 +215,154 @@ final class CoreTest extends TestCase
         $this->get('/deyvo/custom/zoekmachine')
             ->assertOk()
             ->assertSee('Beheer de zichtbaarheid van de website.');
+    }
+
+    public function test_pages_support_drafts_publications_and_revision_restore(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'templates' => [
+                [
+                    'key' => 'landing',
+                    'label' => 'Landingspagina',
+                    'sort' => 10,
+                    'sections' => [
+                        [
+                            'key' => 'hero',
+                            'label' => 'Hero',
+                            'fields' => [
+                                [
+                                    'key' => 'title',
+                                    'label' => 'Titel',
+                                    'type' => 'text',
+                                    'required' => true,
+                                ],
+                                [
+                                    'key' => 'intro',
+                                    'label' => 'Introductie',
+                                    'type' => 'textarea',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->post('/deyvo/pages', [
+            'title' => 'Homepage',
+            'slug' => 'home',
+            'template' => 'landing',
+            'sections' => [
+                'hero' => [
+                    'title' => 'Welkom',
+                    'intro' => 'Welkom bij Deyvo.',
+                ],
+            ],
+            'seo' => [
+                'title' => 'Deyvo',
+                'description' => 'Digitale ervaringen.',
+                'indexable' => '1',
+            ],
+        ])->assertRedirect();
+
+        $page = Page::query()->firstOrFail();
+        self::assertSame('home', $page->key);
+        self::assertNotNull($page->draft_revision_id);
+        self::assertNull($page->published_revision_id);
+        self::assertSame('Welkom', PageRevision::query()->firstOrFail()->sections['hero']['title']);
+        $this->get('/deyvo/pages')->assertOk()->assertSee('Concept')->assertSee('/home');
+
+        $this->post("/deyvo/pages/{$page->id}/publish")->assertRedirect();
+        $page->refresh();
+        self::assertSame('home', $page->published_slug);
+        self::assertNotNull($page->published_revision_id);
+        self::assertNull($page->draft_revision_id);
+
+        $this->put("/deyvo/pages/{$page->id}", [
+            'title' => 'Nieuwe homepage',
+            'slug' => 'home',
+            'template' => 'landing',
+            'sections' => [
+                'hero' => [
+                    'title' => 'Nieuwe titel',
+                    'intro' => 'Nieuwe introductie.',
+                ],
+            ],
+            'seo' => [
+                'title' => 'Nieuwe Deyvo',
+                'description' => 'Nieuwe digitale ervaringen.',
+                'indexable' => '1',
+            ],
+        ])->assertRedirect();
+
+        $page->refresh();
+        self::assertNotNull($page->draft_revision_id);
+        self::assertSame(2, PageRevision::query()->count());
+        $this->post("/deyvo/pages/{$page->id}/revisions/{$page->published_revision_id}/restore")->assertRedirect();
+        self::assertSame(3, PageRevision::query()->count());
+    }
+
+    public function test_preview_markers_and_autosave_keep_published_content_intact(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'templates' => [
+                [
+                    'key' => 'landing',
+                    'label' => 'Landingspagina',
+                    'sections' => [
+                        [
+                            'key' => 'hero',
+                            'label' => 'Hero',
+                            'fields' => [
+                                [
+                                    'key' => 'title',
+                                    'label' => 'Titel',
+                                    'type' => 'text',
+                                    'required' => true,
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $pages = app(PageManager::class);
+        $page = $pages->create([
+            'title' => 'Homepage',
+            'slug' => 'home',
+            'template' => 'landing',
+            'sections' => [
+                'hero' => [
+                    'title' => 'Live titel',
+                ],
+            ],
+            'seo' => [
+                'title' => null,
+                'description' => null,
+                'indexable' => true,
+            ],
+        ]);
+        $pages->publish($page);
+        $page->refresh();
+
+        $this->get("/deyvo/pages/{$page->id}/preview")->assertRedirect('http://localhost/home');
+        $this->blade('@deyvoEditable(\'home.hero.title\') @deyvoEditor')
+            ->assertSee('data-deyvo-field="home.hero.title"', false)
+            ->assertSee('Live titel')
+            ->assertSee('data-deyvo-editor', false);
+        $this->patchJson("/deyvo/pages/{$page->id}/fields", [
+            'field' => 'hero.title',
+            'value' => 'Concepttitel',
+        ])->assertOk()->assertJsonPath('value', 'Concepttitel');
+
+        $page->refresh();
+        self::assertNotSame($page->published_revision_id, $page->draft_revision_id);
+        self::assertSame('Live titel', PageRevision::query()->findOrFail($page->published_revision_id)->sections['hero']['title']);
+        self::assertSame('Concepttitel', PageRevision::query()->findOrFail($page->draft_revision_id)->sections['hero']['title']);
+        $this->blade('@deyvoEditable(\'home.hero.title\')')
+            ->assertSee('Concepttitel');
     }
 }

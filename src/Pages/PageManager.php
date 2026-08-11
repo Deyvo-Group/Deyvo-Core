@@ -1,0 +1,274 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Deyvo\Core\Pages;
+
+use Deyvo\Core\Dashboard\DashboardManager;
+use Deyvo\Core\Models\Page;
+use Deyvo\Core\Models\PageRevision;
+use Closure;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use InvalidArgumentException;
+
+final class PageManager
+{
+    private ?Closure $previewUrlResolver = null;
+
+    public function __construct(
+        private DashboardManager $dashboard,
+    ) {
+    }
+
+    public function templates(): array
+    {
+        return $this->dashboard->pageTemplates();
+    }
+
+    public function template(string $key): ?array
+    {
+        return $this->dashboard->pageTemplate($key);
+    }
+
+    public function registerPreviewUrlResolver(Closure $resolver): void
+    {
+        $this->previewUrlResolver = $resolver;
+    }
+
+    public function previewUrl(Page $page, PageRevision $revision): string
+    {
+        if ($this->previewUrlResolver instanceof Closure) {
+            return ($this->previewUrlResolver)($page, $revision);
+        }
+
+        return url('/'.ltrim($revision->slug, '/'));
+    }
+
+    public function create(array $attributes): Page
+    {
+        return DB::transaction(function () use ($attributes): Page {
+            $template = $this->template($attributes['template']);
+
+            if ($template === null) {
+                throw new InvalidArgumentException("Deyvo page template [{$attributes['template']}] does not exist.");
+            }
+
+            $page = Page::query()->create([
+                'key' => $attributes['slug'],
+            ]);
+            $revision = $page->revisions()->create([
+                'version' => 1,
+                'title' => $attributes['title'],
+                'slug' => $attributes['slug'],
+                'template' => $template['key'],
+                'sections' => $attributes['sections'],
+                'seo' => $attributes['seo'],
+            ]);
+
+            $page->update([
+                'draft_revision_id' => $revision->getKey(),
+            ]);
+
+            return $page->refresh();
+        });
+    }
+
+    public function draft(Page $page): ?PageRevision
+    {
+        return $page->draftRevision ?? $page->publishedRevision;
+    }
+
+    public function updateDraft(Page $page, array $attributes): PageRevision
+    {
+        return DB::transaction(function () use ($page, $attributes): PageRevision {
+            $revision = $this->ensureDraft($page);
+            $revision->update($attributes);
+            $page->touch();
+
+            return $revision->refresh();
+        });
+    }
+
+    public function publish(Page $page): PageRevision
+    {
+        return DB::transaction(function () use ($page): PageRevision {
+            $revision = $this->ensureDraft($page);
+            $conflict = Page::query()
+                ->where('published_slug', $revision->slug)
+                ->whereKeyNot($page->getKey())
+                ->exists();
+
+            if ($conflict) {
+                throw new InvalidArgumentException("Deyvo page slug [{$revision->slug}] is already published.");
+            }
+
+            $page->update([
+                'published_slug' => $revision->slug,
+                'published_revision_id' => $revision->getKey(),
+                'draft_revision_id' => null,
+            ]);
+
+            return $revision->refresh();
+        });
+    }
+
+    public function restore(Page $page, PageRevision $revision): PageRevision
+    {
+        if ($revision->page_id !== $page->getKey()) {
+            throw new InvalidArgumentException('Deyvo page revision does not belong to the page.');
+        }
+
+        return DB::transaction(function () use ($page, $revision): PageRevision {
+            $draft = $page->revisions()->create([
+                'version' => $this->nextVersion($page),
+                'title' => $revision->title,
+                'slug' => $revision->slug,
+                'template' => $revision->template,
+                'sections' => $revision->sections,
+                'seo' => $revision->seo,
+            ]);
+
+            $page->update([
+                'draft_revision_id' => $draft->getKey(),
+            ]);
+
+            return $draft;
+        });
+    }
+
+    public function updateField(Page $page, string $path, mixed $value): array
+    {
+        return DB::transaction(function () use ($page, $path, $value): array {
+            $revision = $this->ensureDraft($page);
+            [$sectionKey, $fieldKey] = $this->fieldPath($path);
+            $template = $this->template($revision->template);
+
+            if ($template === null) {
+                throw new InvalidArgumentException("Deyvo page template [{$revision->template}] does not exist.");
+            }
+
+            $field = $this->field($template, $sectionKey, $fieldKey);
+
+            if ($field === null) {
+                throw new InvalidArgumentException("Deyvo page field [{$path}] does not exist.");
+            }
+
+            $validated = Validator::validate(['value' => $value], [
+                'value' => $this->rules($field),
+            ]);
+            $sections = $revision->sections;
+            $sections[$sectionKey][$fieldKey] = $field['type'] === 'boolean'
+                ? filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                : ($validated['value'] ?? null);
+            $revision->update([
+                'sections' => $sections,
+            ]);
+            $page->touch();
+
+            return [
+                'revision' => $revision->refresh(),
+                'field' => $field,
+                'value' => $sections[$sectionKey][$fieldKey],
+            ];
+        });
+    }
+
+    private function ensureDraft(Page $page): PageRevision
+    {
+        if ($page->draftRevision instanceof PageRevision) {
+            return $page->draftRevision;
+        }
+
+        if (! ($page->publishedRevision instanceof PageRevision)) {
+            throw new InvalidArgumentException("Deyvo page [{$page->key}] has no editable revision.");
+        }
+
+        $published = $page->publishedRevision;
+        $draft = $page->revisions()->create([
+            'version' => $this->nextVersion($page),
+            'title' => $published->title,
+            'slug' => $published->slug,
+            'template' => $published->template,
+            'sections' => $published->sections,
+            'seo' => $published->seo,
+        ]);
+
+        $page->update([
+            'draft_revision_id' => $draft->getKey(),
+        ]);
+
+        return $draft;
+    }
+
+    private function nextVersion(Page $page): int
+    {
+        return ((int) $page->revisions()->max('version')) + 1;
+    }
+
+    private function fieldPath(string $path): array
+    {
+        $parts = explode('.', $path, 2);
+
+        if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+            throw new InvalidArgumentException("Deyvo page field [{$path}] is invalid.");
+        }
+
+        return $parts;
+    }
+
+    private function field(array $template, string $sectionKey, string $fieldKey): ?array
+    {
+        foreach ($template['sections'] as $section) {
+            if ($section['key'] !== $sectionKey) {
+                continue;
+            }
+
+            foreach ($section['fields'] as $field) {
+                if ($field['key'] === $fieldKey) {
+                    return $field;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function rules(array $field): array
+    {
+        $rules = [$field['required'] ? 'required' : 'nullable'];
+
+        if ($field['type'] === 'boolean') {
+            $rules[] = 'boolean';
+
+            return $rules;
+        }
+
+        $rules[] = 'string';
+
+        if ($field['type'] === 'email') {
+            $rules[] = 'email';
+            $rules[] = 'max:255';
+
+            return $rules;
+        }
+
+        if ($field['type'] === 'url') {
+            $rules[] = 'url';
+            $rules[] = 'max:2048';
+
+            return $rules;
+        }
+
+        if ($field['type'] === 'select') {
+            $rules[] = Rule::in(array_column($field['options'], 'value'));
+
+            return $rules;
+        }
+
+        $rules[] = 'max:65535';
+
+        return $rules;
+    }
+}
