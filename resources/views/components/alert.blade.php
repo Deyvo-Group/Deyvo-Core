@@ -10,7 +10,7 @@
     'error' => 'border-red-200 bg-red-50 text-red-950',
 ])
 
-<div role="alert" {{ $attributes->class([
+<div role="alert" data-deyvo-alert {{ $attributes->class([
     'flex items-start justify-between gap-4 rounded-md border px-4 py-3 text-sm',
     $styles[$type] ?? $styles['info'],
 ]) }}>
