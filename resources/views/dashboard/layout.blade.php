@@ -18,14 +18,17 @@
 </head>
 <body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased" data-deyvo-dashboard>
     <div class="min-h-screen md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside class="hidden bg-neutral-950 px-4 py-5 text-neutral-200 md:block">
-            <a href="{{ route('deyvo.dashboard.index') }}" class="block px-3 text-lg font-semibold text-white">{{ $appName }}</a>
+        <aside class="hidden bg-neutral-950 px-4 py-5 text-neutral-200 md:block" data-deyvo-dashboard-sidebar>
+            <a href="{{ route('deyvo.dashboard.index') }}" class="flex items-center gap-3 px-3 text-lg font-semibold text-white" data-deyvo-dashboard-brand>
+                <span class="inline-flex size-8 items-center justify-center text-sm font-bold" data-deyvo-dashboard-brand-mark>D</span>
+                <span class="truncate">{{ $appName }}</span>
+            </a>
             <p class="mt-1 px-3 text-xs font-medium text-neutral-400">Dashboard</p>
 
             <nav class="mt-8 space-y-1" aria-label="Dashboard navigatie">
                 @foreach ($navigation as $item)
                     @php($isActive = request()->routeIs($item['active']) && (! isset($item['page']) || request()->route('page') === $item['page']))
-                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" @class([
+                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" data-deyvo-dashboard-nav @class([
                         'block rounded-md px-3 py-2 text-sm font-medium transition',
                         'bg-white/10 text-white' => $isActive,
                         'text-neutral-300 hover:bg-white/5 hover:text-white' => ! $isActive,
@@ -37,7 +40,7 @@
         </aside>
 
         <div class="min-w-0">
-            <header class="border-b border-neutral-200 bg-white">
+            <header class="border-b border-neutral-200 bg-white" data-deyvo-dashboard-header>
                 <div class="mx-auto flex min-h-16 max-w-7xl items-center gap-4 px-5 sm:px-8">
                     <a href="{{ route('deyvo.dashboard.index') }}" class="text-base font-semibold text-neutral-950 md:hidden">{{ $appName }}</a>
 
@@ -56,7 +59,7 @@
                 </div>
             </header>
 
-            <main class="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8">
+            <main class="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8" data-deyvo-dashboard-main>
                 <x-deyvo::flash />
                 {{ $slot }}
             </main>

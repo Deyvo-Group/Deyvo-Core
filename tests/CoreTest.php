@@ -74,7 +74,7 @@ final class CoreTest extends TestCase
     {
         $this->blade('<x-deyvo::button>Opslaan</x-deyvo::button>')
             ->assertSee('Opslaan')
-            ->assertSee('bg-neutral-950');
+            ->assertSee('bg-gradient-to-br');
     }
 
     public function test_package_test_view_renders(): void
