@@ -14,6 +14,28 @@
     max-width: 16rem;
 }
 
+[data-deyvo-dashboard-account] {
+    margin-left: auto;
+}
+
+[data-deyvo-dashboard-logout],
+[data-deyvo-editor-logout] {
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.56);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 3px 10px rgba(30, 64, 175, 0.08);
+    color: #1e3a8a;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+[data-deyvo-dashboard-logout]:hover,
+[data-deyvo-editor-logout]:hover {
+    border-color: rgba(37, 99, 235, 0.42);
+    background: rgba(219, 234, 254, 0.78);
+    color: #1d4ed8;
+}
+
 [data-deyvo-dashboard] > div > aside {
     background: rgba(20, 44, 89, 0.84);
     border-right: 1px solid rgba(255, 255, 255, 0.16);
@@ -357,9 +379,18 @@ dialog[data-deyvo-modal]::backdrop,
 }
 
 [data-deyvo-editor-actor] {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid rgba(37, 99, 235, 0.16);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.46);
     color: #475569;
     font-size: 0.8125rem;
     font-weight: 600;
+}
+
+[data-deyvo-editor-logout] {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
 }
 
 [data-deyvo-editor] {

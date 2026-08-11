@@ -137,6 +137,10 @@ final class CoreTest extends TestCase
 
     public function test_dashboard_records_attributed_activity_and_renders_it(): void
     {
+        Route::post('/logout', static fn () => response('Uitgelogd'))->name('logout');
+        Route::getRoutes()->refreshNameLookups();
+        self::assertTrue(Route::has('logout'));
+
         $this->actingAs(new GenericUser([
             'id' => 7,
             'name' => 'Dirk Deyvo',
@@ -160,6 +164,8 @@ final class CoreTest extends TestCase
         $this->get('/deyvo')
             ->assertOk()
             ->assertSee('Dirk Deyvo')
+            ->assertSee('Uitloggen')
+            ->assertSee('action="http://localhost/logout"', false)
             ->assertSee('Recente activiteit');
         $this->get('/deyvo/activity')
             ->assertOk()
@@ -360,6 +366,10 @@ final class CoreTest extends TestCase
 
     public function test_preview_markers_and_autosave_keep_published_content_intact(): void
     {
+        Route::post('/logout', static fn () => response('Uitgelogd'))->name('logout');
+        Route::getRoutes()->refreshNameLookups();
+        self::assertTrue(Route::has('logout'));
+
         $this->actingAs(new GenericUser([
             'id' => 9,
             'name' => 'Editor Beheerder',
@@ -420,6 +430,8 @@ final class CoreTest extends TestCase
             ->assertSee('data-deyvo-editor-overlay', false)
             ->assertSee('Editor actief')
             ->assertSee('Ingelogd: Editor Beheerder')
+            ->assertSee('data-deyvo-editor-logout', false)
+            ->assertSee('Uitloggen')
             ->assertSee('Concept v1');
         $this->patchJson("/deyvo/pages/{$page->id}/fields", [
             'field' => 'hero.title',

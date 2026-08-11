@@ -34,6 +34,7 @@ return [
         'enabled' => env('DEYVO_DASHBOARD_ENABLED', false),
         'path' => env('DEYVO_DASHBOARD_PATH', 'deyvo'),
         'middleware' => ['web', 'auth'],
+        'logout_route' => env('DEYVO_DASHBOARD_LOGOUT_ROUTE', 'logout'),
         'schema' => [
             'path' => env('DEYVO_DASHBOARD_SCHEMA_PATH'),
         ],
