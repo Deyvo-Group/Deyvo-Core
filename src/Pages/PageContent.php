@@ -64,6 +64,13 @@ final class PageContent
         return new HtmlString($html.'>'.e($this->stringValue($value)).'</span>');
     }
 
+    public function blocks(string $pageKey): array
+    {
+        $revision = $this->preview->revision($pageKey) ?? $this->publishedRevision($pageKey);
+
+        return is_array($revision?->blocks) ? $revision->blocks : [];
+    }
+
     public function editor(): HtmlString
     {
         return new HtmlString('<aside data-deyvo-editor hidden></aside>');

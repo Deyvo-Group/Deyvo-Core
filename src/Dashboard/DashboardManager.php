@@ -79,6 +79,30 @@ final class DashboardManager
         return $this->schema()->template($key);
     }
 
+    public function builderBlocks(array $template): array
+    {
+        if (! ($template['builder']['enabled'] ?? false)) {
+            return [];
+        }
+
+        $blocks = [];
+
+        foreach ($template['builder']['blocks'] as $key) {
+            $block = $this->schema()->block($key);
+
+            if (is_array($block)) {
+                $blocks[] = $block;
+            }
+        }
+
+        return $blocks;
+    }
+
+    public function builderBlock(string $key): ?array
+    {
+        return $this->schema()->block($key);
+    }
+
     public function values(array $page): array
     {
         $settingKeys = [];

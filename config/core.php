@@ -24,6 +24,7 @@ return [
         'schema' => [
             'path' => env('DEYVO_DASHBOARD_SCHEMA_PATH'),
         ],
+        'vite' => [],
         'pages' => [
             'enabled' => env('DEYVO_PAGES_ENABLED', false),
         ],

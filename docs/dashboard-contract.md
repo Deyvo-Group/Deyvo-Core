@@ -22,6 +22,10 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
     'schema' => [
         'path' => 'resources/deyvo/dashboard.json',
     ],
+    'vite' => [
+        'resources/css/app.css',
+        'resources/js/app.js',
+    ],
     'pages' => [
         'enabled' => true,
     ],
@@ -34,6 +38,7 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
 | path | Pad zonder begin- of eindslash | Dashboardbasis, bijvoorbeeld /dashboard. |
 | middleware | Array met hostmiddleware | Beveiligt dashboard, preview en editor. |
 | schema.path | Absoluut pad of pad relatief aan de hostroot | Core leest dit JSON-bestand lokaal. |
+| vite | Array met bestaande Vite-entrypoints van de host | Laadt Tailwind en de Core-JavaScript in het zelfstandige dashboard. |
 | pages.enabled | Boolean | Activeert pagina’s, revisies, preview en editorroutes. |
 
 Core levert geen login, users, rollen, permissions, uploads of mediafunctionaliteit. De website levert de middleware die toegang tot het dashboard geeft.
@@ -45,11 +50,23 @@ Het JSON-bestand heeft twee onafhankelijke onderdelen.
 ~~~json
 {
   "pages": [],
+  "blocks": [],
   "templates": []
 }
 ~~~
 
-pages definieert gegroepeerde algemene instellingen en content. Templates definieert pagina’s met versieerbare secties.
+pages definieert gegroepeerde algemene instellingen en content. blocks definieert de bouwstenen van de pagina-editor. templates definieert pagina’s met versieerbare secties of een blokbuilder.
+
+De host moet haar Tailwind- en JavaScript-entrypoints aan dashboard.vite geven.
+
+~~~css
+@source "../../vendor/deyvo/core/resources/views/**/*.blade.php";
+@source "../../vendor/deyvo/core/src/**/*.php";
+~~~
+
+~~~js
+import '../../vendor/deyvo/core/resources/js/core.js';
+~~~
 
 ## Algemene instellingen
 
@@ -166,6 +183,108 @@ Een template definieert de bewerkbare secties van een pagina. Maak een template 
 
 Templatevelden ondersteunen text, textarea, email, url, select en boolean. Dezelfde validatieregels voor required, help, placeholder en options gelden als bij algemene instellingen.
 
+## Blokbuilder
+
+Een buildertemplate heeft geen verplichte secties. De template geeft expliciet op welke blokken een beheerder mag toevoegen. De volgorde van blocks in een revisie is ook de volgorde waarin de website ze rendert.
+
+~~~json
+{
+  "blocks": [
+    {
+      "key": "hero",
+      "label": "Hero",
+      "description": "Opening van een pagina.",
+      "category": "Introductie",
+      "fields": [
+        {
+          "key": "heading",
+          "label": "Titel",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "body",
+          "label": "Introductie",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "key": "text",
+      "label": "Tekst",
+      "category": "Inhoud",
+      "fields": [
+        {
+          "key": "body",
+          "label": "Tekst",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "key": "builder-page",
+      "label": "Builderpagina",
+      "builder": {
+        "enabled": true,
+        "blocks": ["hero", "text"]
+      },
+      "sections": []
+    }
+  ]
+}
+~~~
+
+| Blokveld | Verwachting | Resultaat |
+| --- | --- | --- |
+| key | Kleine letters, cijfers en koppeltekens | Stabiel bloktype in een revisie. |
+| label | Niet-lege tekst | Naam in de blokkiezer en inspector. |
+| description | Tekst | Uitleg in de blokkiezer en inspector. |
+| category | Tekst | Groepeert blokken in de blokkiezer. Standaard Algemeen. |
+| fields | Array, ook leeg toegestaan | Velden van dit blok. |
+| builder.enabled | Boolean | Activeert de builder voor deze template. Standaard true zodra builder bestaat. |
+| builder.blocks | Niet-lege array met bekende blokkeys | De enige blokken die op de template mogen staan. |
+| sections | Array | Mag leeg zijn bij een actieve builder. |
+
+Blokvelden gebruiken dezelfde types en validatie als templatevelden: text, textarea, email, url, select en boolean. Een beheerder kan blokken toevoegen, selecteren, verplaatsen, dupliceren en verwijderen. De inspector schrijft alle veldwaarden naar een verborgen JSON-invoer; het gewone paginaformulier bewaart vervolgens een nieuw concept.
+
+Core publiceert een bruikbaar startschema met hero, text, quote, call-to-action en divider. Dit startschema bevat een standaardpage-template met de builder ingeschakeld. De website mag dit schema uitbreiden of vervangen.
+
+### Revisieblokken
+
+Core slaat de builder op in deyvo_page_revisions.blocks als een geordende JSON-array.
+
+~~~json
+[
+  {
+    "id": "block-hero-01",
+    "type": "hero",
+    "data": {
+      "heading": "Bouw met blokken",
+      "body": "Maak elke pagina op maat."
+    }
+  },
+  {
+    "id": "block-text-01",
+    "type": "text",
+    "data": {
+      "body": "Deyvo bewaart iedere wijziging als een conceptrevisie."
+    }
+  }
+]
+~~~
+
+| Eigenschap | Verwachting | Core-gedrag |
+| --- | --- | --- |
+| id | Unieke kleine letters, cijfers en koppeltekens | Blijft stabiel voor selectie en eventuele host-JavaScript. |
+| type | Blokkey die door de template is toegestaan | Bepaalt de valide velden en publieke view. |
+| data | Object met uitsluitend bekende blokvelden | Core valideert en normaliseert de waarden op opslaan. |
+| arrayvolgorde | Geordende lijst | Bepaalt de publieke render-volgorde. |
+
+Onbekende bloktypen, dubbele IDs, onbekende velden en ongeldige waarden worden niet opgeslagen. Bestaande secties en blokken kunnen op dezelfde template naast elkaar bestaan.
+
 ## Pagina- en revisieopslag
 
 Wanneer een beheerder een pagina aanmaakt, geeft het dashboard deze waarden aan Core.
@@ -192,7 +311,7 @@ Wanneer een beheerder een pagina aanmaakt, geeft het dashboard deze waarden aan 
 | Invoer | Core-opslag |
 | --- | --- |
 | slug bij aanmaken | Stabiele deyvo_pages.key. |
-| title, slug, template, sections, seo | Nieuwe of bijgewerkte deyvo_page_revisions-revisie. |
+| title, slug, template, sections, blocks, seo | Nieuwe of bijgewerkte deyvo_page_revisions-revisie. |
 | Publiceren | deyvo_pages.published_revision_id en published_slug verwijzen naar de live-revisie. |
 | Bewerken van een live pagina | Core kloont eerst de live-revisie naar een nieuw concept. |
 | Revisie herstellen | Core maakt een nieuw concept op basis van de gekozen revisie. |
@@ -277,6 +396,26 @@ De directive deyvoEditable geeft in bezoekersmodus alleen een geescapeerde tekst
 | data-deyvo-url | Beveiligde autosave-route voor de pagina. |
 | data-deyvo-options | JSON-selectopties. |
 
+### Blokken renderen
+
+Gebruik de component in een publieke Blade-view. Bezoekers zien de gepubliceerde revisie. Tijdens een actieve Core-preview ziet dezelfde component het concept.
+
+~~~blade
+<x-deyvo::blocks page="over-deyvo" />
+~~~
+
+Of vraag de ruwe, geordende blokdata op voor een eigen loop.
+
+~~~blade
+@foreach (deyvo_blocks('over-deyvo') as $block)
+    <section data-block="{{ $block['id'] }}">
+        {{ data_get($block, 'data.heading') }}
+    </section>
+@endforeach
+~~~
+
+Core levert standaardviews voor hero, text, quote, call-to-action en divider. Een host overschrijft de weergave van een blok door resources/views/deyvo-blocks/{bloktype}.blade.php te maken. De view ontvangt altijd een array in $block met id, type en data. Daarmee blijven design en domeinspecifieke markup van de website, terwijl Core de blokdata, concepten en publicatie beheert.
+
 ## Previewroute
 
 Core leidt standaard naar /{slug}. Registreer een resolver wanneer de host andere publieke routes gebruikt.
@@ -295,7 +434,7 @@ De resolver ontvangt de Core-pagina en de te previewen revisie en moet een URL v
 
 ## Grenzen
 
-- Rich text wordt niet ondersteund door dit contract.
+- Rich text en geneste blokken worden niet ondersteund door dit contract.
 - Menu’s zijn nog geen Core-module.
 - Media wacht op de zelfstandige Deyvo Media-module.
 - Oude tabellen worden niet automatisch geïmporteerd.

@@ -237,6 +237,67 @@ Add deyvoEditor once near the end of the host layout and include the Core JavaSc
 
 The inline editor supports the schema field types text, textarea, email, url, select, and boolean. It saves concepts through the authenticated dashboard route. Rich text, media, menus, and legacy-data import are intentionally separate modules or migration work.
 
+## Block Builder
+
+The page editor also supports a WordPress/Gutenberg-style block builder. Add block definitions and an enabled builder to the dashboard schema. A builder template may use an empty sections array.
+
+```json
+{
+  "pages": [],
+  "blocks": [
+    {
+      "key": "hero",
+      "label": "Hero",
+      "category": "Introduction",
+      "fields": [
+        {
+          "key": "heading",
+          "label": "Heading",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "key": "builder-page",
+      "label": "Builder page",
+      "builder": {
+        "enabled": true,
+        "blocks": ["hero"]
+      },
+      "sections": []
+    }
+  ]
+}
+```
+
+The editor supports inserting, selecting, reordering, duplicating, removing and configuring blocks. All block data is stored on the page revision, so it follows the existing draft, preview, publish and restore workflow.
+
+Render a page's blocks in its public Blade view.
+
+```blade
+<x-deyvo::blocks page="home" />
+```
+
+Core includes neutral views for `hero`, `text`, `quote`, `call-to-action` and `divider`. Override an individual block in the host application with `resources/views/deyvo-blocks/{block-type}.blade.php`. The view receives a `$block` array with `id`, `type` and `data`.
+
+The package dashboard is a standalone layout. Give it the host Vite entrypoints so its Tailwind styles and builder JavaScript are loaded.
+
+```php
+'dashboard' => [
+    'vite' => [
+        'resources/css/app.css',
+        'resources/js/app.js',
+    ],
+],
+```
+
+```js
+import '../../vendor/deyvo/core/resources/js/core.js';
+```
+
 ## Maintenance
 
 Use the package maintenance view with Laravel's built-in maintenance mode.

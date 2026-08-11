@@ -18,6 +18,7 @@ final class PageRevision extends Model
         'slug',
         'template',
         'sections',
+        'blocks',
         'seo',
     ];
 
@@ -25,6 +26,7 @@ final class PageRevision extends Model
     {
         return [
             'sections' => 'array',
+            'blocks' => 'array',
             'seo' => 'array',
         ];
     }

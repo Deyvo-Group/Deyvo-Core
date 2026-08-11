@@ -32,6 +32,11 @@ final class PageManager
         return $this->dashboard->pageTemplate($key);
     }
 
+    public function builderBlocks(array $template): array
+    {
+        return $this->dashboard->builderBlocks($template);
+    }
+
     public function registerPreviewUrlResolver(Closure $resolver): void
     {
         $this->previewUrlResolver = $resolver;
@@ -64,6 +69,7 @@ final class PageManager
                 'slug' => $attributes['slug'],
                 'template' => $template['key'],
                 'sections' => $attributes['sections'],
+                'blocks' => $this->normaliseBlocks($attributes['blocks'] ?? [], $template),
                 'seo' => $attributes['seo'],
             ]);
 
@@ -84,6 +90,13 @@ final class PageManager
     {
         return DB::transaction(function () use ($page, $attributes): PageRevision {
             $revision = $this->ensureDraft($page);
+            $template = $this->template($attributes['template'] ?? $revision->template);
+
+            if ($template === null) {
+                throw new InvalidArgumentException("Deyvo page template [{$revision->template}] does not exist.");
+            }
+
+            $attributes['blocks'] = $this->normaliseBlocks($attributes['blocks'] ?? $revision->blocks ?? [], $template);
             $revision->update($attributes);
             $page->touch();
 
@@ -127,6 +140,7 @@ final class PageManager
                 'slug' => $revision->slug,
                 'template' => $revision->template,
                 'sections' => $revision->sections,
+                'blocks' => $revision->blocks ?? [],
                 'seo' => $revision->seo,
             ]);
 
@@ -192,6 +206,7 @@ final class PageManager
             'slug' => $published->slug,
             'template' => $published->template,
             'sections' => $published->sections,
+            'blocks' => $published->blocks ?? [],
             'seo' => $published->seo,
         ]);
 
@@ -233,6 +248,83 @@ final class PageManager
         }
 
         return null;
+    }
+
+    private function normaliseBlocks(mixed $blocks, array $template): array
+    {
+        if (! ($template['builder']['enabled'] ?? false)) {
+            return [];
+        }
+
+        if (! is_array($blocks) || ! array_is_list($blocks)) {
+            throw new InvalidArgumentException('Deyvo page blocks must be a JSON array.');
+        }
+
+        $allowedBlocks = [];
+
+        foreach ($this->builderBlocks($template) as $block) {
+            $allowedBlocks[$block['key']] = $block;
+        }
+
+        $normalised = [];
+        $ids = [];
+
+        foreach ($blocks as $block) {
+            if (! is_array($block) || array_is_list($block)) {
+                throw new InvalidArgumentException('Every Deyvo page block must be a JSON object.');
+            }
+
+            $id = $block['id'] ?? null;
+
+            if (! is_string($id) || preg_match('/^[a-z0-9][a-z0-9-]{0,79}$/', $id) !== 1) {
+                throw new InvalidArgumentException('Deyvo page block id is invalid.');
+            }
+
+            if (in_array($id, $ids, true)) {
+                throw new InvalidArgumentException("Deyvo page block id [{$id}] is duplicated.");
+            }
+
+            $type = $block['type'] ?? null;
+
+            if (! is_string($type) || ! isset($allowedBlocks[$type])) {
+                throw new InvalidArgumentException('Deyvo page block type is not allowed by the template.');
+            }
+
+            $data = $block['data'] ?? [];
+
+            if (! is_array($data) || array_is_list($data)) {
+                throw new InvalidArgumentException("Deyvo page block [{$id}] data must be a JSON object.");
+            }
+
+            $definition = $allowedBlocks[$type];
+            $fields = array_column($definition['fields'], 'key');
+            $unknownFields = array_diff(array_keys($data), $fields);
+
+            if ($unknownFields !== []) {
+                throw new InvalidArgumentException("Deyvo page block [{$id}] contains an unknown field.");
+            }
+
+            $values = [];
+
+            foreach ($definition['fields'] as $field) {
+                $value = $data[$field['key']] ?? null;
+                $validated = Validator::validate(['value' => $value], [
+                    'value' => $this->rules($field),
+                ]);
+                $values[$field['key']] = $field['type'] === 'boolean'
+                    ? filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                    : ($validated['value'] ?? null);
+            }
+
+            $ids[] = $id;
+            $normalised[] = [
+                'id' => $id,
+                'type' => $type,
+                'data' => $values,
+            ];
+        }
+
+        return $normalised;
     }
 
     private function rules(array $field): array
