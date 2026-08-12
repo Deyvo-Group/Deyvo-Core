@@ -258,6 +258,76 @@ final class CoreTest extends TestCase
         $this->get('/deyvo/custom/unknown')->assertNotFound();
     }
 
+    public function test_dashboard_manages_schema_defined_header_and_footer_layouts(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'layouts' => [
+                [
+                    'key' => 'header',
+                    'label' => 'Header',
+                    'description' => 'Beheer de globale navigatie en oproep tot actie.',
+                    'sort' => 10,
+                    'fields' => [
+                        [
+                            'key' => 'layout.header.primary_cta',
+                            'label' => 'Primaire knop',
+                            'type' => 'text',
+                            'storage' => 'content',
+                            'content_title' => 'Header primaire knop',
+                            'required' => true,
+                        ],
+                        [
+                            'key' => 'layout.header.show_cta',
+                            'label' => 'Toon primaire knop',
+                            'type' => 'boolean',
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'footer',
+                    'label' => 'Footer',
+                    'description' => 'Beheer de inhoud onderaan de website.',
+                    'sort' => 20,
+                    'fields' => [
+                        [
+                            'key' => 'layout.footer.brand_intro',
+                            'label' => 'Introductie',
+                            'type' => 'textarea',
+                            'storage' => 'content',
+                            'content_title' => 'Footer introductie',
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('Layout')
+            ->assertSee('Header en footer');
+        $this->get('/deyvo/layout')
+            ->assertOk()
+            ->assertSee('Header')
+            ->assertSee('Footer');
+        $this->get('/deyvo/layout/header')
+            ->assertOk()
+            ->assertSee('Beheer de globale navigatie en oproep tot actie.')
+            ->assertSee('Primaire knop');
+        $this->put('/deyvo/layout/header', [
+            'values' => [
+                'Plan een gesprek',
+                '1',
+            ],
+        ])->assertRedirect(route('deyvo.dashboard.layouts.show', ['layout' => 'header']));
+
+        self::assertSame('Plan een gesprek', SiteContent::body('layout.header.primary_cta'));
+        self::assertSame('1', SiteSettings::get('layout.header.show_cta'));
+        self::assertSame('Header primaire knop', Content::query()->where('key', 'layout.header.primary_cta')->value('title'));
+        self::assertTrue(AuditLog::query()->where('event', 'layout.updated')->exists());
+        $this->get('/deyvo/layout/unknown')->assertNotFound();
+    }
+
     public function test_dashboard_reads_a_schema_from_the_configured_json_path(): void
     {
         config()->set('deyvo-core.dashboard.schema.path', __DIR__.'/Fixtures/dashboard.json');

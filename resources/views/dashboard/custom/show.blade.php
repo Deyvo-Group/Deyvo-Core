@@ -8,7 +8,7 @@
             @endif
         </div>
 
-        <form method="POST" action="{{ route('deyvo.dashboard.custom.update', ['page' => $page['key']]) }}" class="mt-8 space-y-6">
+        <form method="POST" action="{{ $updateUrl }}" class="mt-8 space-y-6">
             @csrf
             @method('PUT')
 

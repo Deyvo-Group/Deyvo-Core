@@ -43,6 +43,15 @@ final class DashboardManager
             ];
         }
 
+        if ($this->layouts() !== []) {
+            $navigation[] = [
+                'label' => 'Layout',
+                'route' => 'deyvo.dashboard.layouts.index',
+                'active' => 'deyvo.dashboard.layouts.*',
+                'sort' => 25,
+            ];
+        }
+
         if (config('deyvo-core.audit.enabled', true)) {
             $navigation[] = [
                 'label' => 'Activiteit',
@@ -76,6 +85,16 @@ final class DashboardManager
     public function page(string $key): ?array
     {
         return $this->schema()->page($key);
+    }
+
+    public function layouts(): array
+    {
+        return $this->schema()->layouts();
+    }
+
+    public function layout(string $key): ?array
+    {
+        return $this->schema()->layout($key);
     }
 
     public function pageTemplates(): array

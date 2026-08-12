@@ -20,6 +20,7 @@ final class DashboardSchema
 
     private function __construct(
         private array $pages,
+        private array $layouts,
         private array $templates,
         private array $blocks,
     ) {
@@ -27,7 +28,7 @@ final class DashboardSchema
 
     public static function empty(): self
     {
-        return new self([], [], []);
+        return new self([], [], [], []);
     }
 
     public static function fromJson(string $json): self
@@ -55,6 +56,22 @@ final class DashboardSchema
         foreach ($this->pages as $page) {
             if ($page['key'] === $key) {
                 return $page;
+            }
+        }
+
+        return null;
+    }
+
+    public function layouts(): array
+    {
+        return $this->layouts;
+    }
+
+    public function layout(string $key): ?array
+    {
+        foreach ($this->layouts as $layout) {
+            if ($layout['key'] === $key) {
+                return $layout;
             }
         }
 
@@ -123,6 +140,30 @@ final class DashboardSchema
             $pages[] = $page;
         }
 
+        $layoutDefinitions = $definition['layouts'] ?? [];
+
+        if (! is_array($layoutDefinitions) || ! array_is_list($layoutDefinitions)) {
+            throw new InvalidArgumentException('Deyvo dashboard schema layouts must be a JSON array.');
+        }
+
+        $layouts = [];
+        $layoutKeys = [];
+
+        foreach ($layoutDefinitions as $layoutDefinition) {
+            if (! is_array($layoutDefinition) || array_is_list($layoutDefinition)) {
+                throw new InvalidArgumentException('Every Deyvo dashboard layout must be a JSON object.');
+            }
+
+            $layout = self::layoutDefinition($layoutDefinition);
+
+            if (in_array($layout['key'], $layoutKeys, true)) {
+                throw new InvalidArgumentException("Deyvo dashboard layout key [{$layout['key']}] is duplicated.");
+            }
+
+            $layoutKeys[] = $layout['key'];
+            $layouts[] = $layout;
+        }
+
         $blockDefinitions = $definition['blocks'] ?? [];
 
         if (! is_array($blockDefinitions) || ! array_is_list($blockDefinitions)) {
@@ -172,24 +213,35 @@ final class DashboardSchema
         }
 
         usort($pages, static fn (array $left, array $right): int => $left['sort'] <=> $right['sort']);
+        usort($layouts, static fn (array $left, array $right): int => $left['sort'] <=> $right['sort']);
         usort($templates, static fn (array $left, array $right): int => $left['sort'] <=> $right['sort']);
         usort($blocks, static fn (array $left, array $right): int => [$left['category'], $left['label']] <=> [$right['category'], $right['label']]);
 
-        return new self($pages, $templates, $blocks);
+        return new self($pages, $layouts, $templates, $blocks);
     }
 
     private static function pageDefinition(array $definition): array
     {
-        $key = self::requiredString($definition['key'] ?? null, 'page key', 80);
+        return self::formDefinition($definition, 'page');
+    }
+
+    private static function layoutDefinition(array $definition): array
+    {
+        return self::formDefinition($definition, 'layout');
+    }
+
+    private static function formDefinition(array $definition, string $type): array
+    {
+        $key = self::requiredString($definition['key'] ?? null, "{$type} key", 80);
 
         if (preg_match('/^[a-z0-9][a-z0-9-]*$/', $key) !== 1) {
-            throw new InvalidArgumentException("Deyvo dashboard page key [{$key}] is invalid.");
+            throw new InvalidArgumentException("Deyvo dashboard {$type} key [{$key}] is invalid.");
         }
 
         $fields = $definition['fields'] ?? null;
 
         if (! is_array($fields) || ! array_is_list($fields) || $fields === []) {
-            throw new InvalidArgumentException("Deyvo dashboard page [{$key}] must define fields.");
+            throw new InvalidArgumentException("Deyvo dashboard {$type} [{$key}] must define fields.");
         }
 
         $parsedFields = [];
@@ -197,13 +249,13 @@ final class DashboardSchema
 
         foreach ($fields as $field) {
             if (! is_array($field) || array_is_list($field)) {
-                throw new InvalidArgumentException("Deyvo dashboard page [{$key}] contains an invalid field.");
+                throw new InvalidArgumentException("Deyvo dashboard {$type} [{$key}] contains an invalid field.");
             }
 
             $parsedField = self::fieldDefinition($field);
 
             if (in_array($parsedField['key'], $fieldKeys, true)) {
-                throw new InvalidArgumentException("Deyvo dashboard field key [{$parsedField['key']}] is duplicated.");
+                throw new InvalidArgumentException("Deyvo dashboard {$type} field key [{$parsedField['key']}] is duplicated.");
             }
 
             $fieldKeys[] = $parsedField['key'];

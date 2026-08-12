@@ -6,6 +6,7 @@ use Deyvo\Core\Http\Controllers\Dashboard\ContentController;
 use Deyvo\Core\Http\Controllers\Dashboard\ActivityLogController;
 use Deyvo\Core\Http\Controllers\Dashboard\CustomPageController;
 use Deyvo\Core\Http\Controllers\Dashboard\DashboardController;
+use Deyvo\Core\Http\Controllers\Dashboard\LayoutController;
 use Deyvo\Core\Http\Controllers\Dashboard\SettingController;
 use Deyvo\Core\Http\Middleware\AuditDashboardFailuresMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,14 @@ Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
         Route::get('settings/{setting}/edit', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings/{setting}', [SettingController::class, 'update'])->name('settings.update');
         Route::delete('settings/{setting}', [SettingController::class, 'destroy'])->name('settings.destroy');
+
+        Route::get('layout', [LayoutController::class, 'index'])->name('layouts.index');
+        Route::get('layout/{layout}', [CustomPageController::class, 'showLayout'])
+            ->where('layout', '[a-z0-9][a-z0-9-]*')
+            ->name('layouts.show');
+        Route::put('layout/{layout}', [CustomPageController::class, 'updateLayout'])
+            ->where('layout', '[a-z0-9][a-z0-9-]*')
+            ->name('layouts.update');
 
         Route::get('custom/{page}', [CustomPageController::class, 'show'])
             ->where('page', '[a-z0-9][a-z0-9-]*')

@@ -56,6 +56,7 @@ final class AuditLog extends Model
             'setting.updated' => 'Instelling bijgewerkt',
             'setting.deleted' => 'Instelling verwijderd',
             'custom.updated' => 'Dashboardonderdeel bijgewerkt',
+            'layout.updated' => 'Layoutonderdeel bijgewerkt',
             'page.created' => 'Pagina aangemaakt',
             'page.updated' => 'Pagina bijgewerkt',
             'page.published' => 'Pagina gepubliceerd',
