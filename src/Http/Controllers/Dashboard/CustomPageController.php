@@ -173,6 +173,12 @@ final class CustomPageController
             return $rules;
         }
 
+        if ($field['type'] === 'media') {
+            $rules[] = 'max:500';
+
+            return $rules;
+        }
+
         if ($field['type'] === 'select') {
             $rules[] = Rule::in(array_column($field['options'], 'value'));
 

@@ -71,6 +71,30 @@
       ]
     },
     {
+      "key": "image",
+      "label": "Afbeelding",
+      "description": "Een media-item met alt-tekst en optioneel bijschrift.",
+      "category": "Media",
+      "fields": [
+        {
+          "key": "media",
+          "label": "Media",
+          "type": "media",
+          "required": true
+        },
+        {
+          "key": "alt",
+          "label": "Alt-tekst",
+          "type": "text"
+        },
+        {
+          "key": "caption",
+          "label": "Bijschrift",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
       "key": "quote",
       "label": "Citaat",
       "description": "Een uitgelichte quote met bron.",
@@ -138,6 +162,7 @@
         "enabled": true,
         "blocks": [
           "hero",
+          "image",
           "html",
           "text",
           "quote",

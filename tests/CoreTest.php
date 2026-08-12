@@ -8,6 +8,9 @@ use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Models\Content;
 use Deyvo\Core\Models\AuditLog;
+use Deyvo\Core\Models\Folder;
+use Deyvo\Core\Models\Media;
+use Deyvo\Core\Models\Menu;
 use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Models\Setting;
@@ -18,7 +21,9 @@ use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Flash;
 use Illuminate\Http\Request;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 final class CoreTest extends TestCase
 {
@@ -143,6 +148,138 @@ final class CoreTest extends TestCase
             ->assertOk()
             ->assertSee('contact.email')
             ->assertSee('hello@deyvo.test');
+    }
+
+    public function test_core_dashboard_manages_media_menus_seo_and_typed_settings(): void
+    {
+        $this->post('/deyvo/media/folders', [
+            'name' => 'Afbeeldingen',
+        ])->assertRedirect();
+
+        $folder = Folder::query()->firstOrFail();
+
+        $this->post('/deyvo/media', [
+            'folder_id' => $folder->id,
+            'name' => 'Hero',
+            'url' => 'https://example.com/hero.jpg',
+            'alt' => 'Hero afbeelding',
+        ])->assertRedirect();
+
+        $media = Media::query()->firstOrFail();
+        self::assertSame('https://example.com/hero.jpg', deyvo_media_url($media->id));
+        $this->get('/deyvo/media')
+            ->assertOk()
+            ->assertSee('Hero')
+            ->assertSee('Afbeeldingen');
+
+        $this->post('/deyvo/menus', [
+            'key' => 'header',
+            'title' => 'Hoofdmenu',
+            'items' => json_encode([
+                [
+                    'label' => 'Home',
+                    'url' => '/',
+                ],
+            ], JSON_THROW_ON_ERROR),
+            'is_active' => '1',
+        ])->assertRedirect(route('deyvo.dashboard.menus.index'));
+
+        self::assertSame('Home', deyvo_menu('header')[0]['label']);
+        $this->get('/deyvo/menus')
+            ->assertOk()
+            ->assertSee('Hoofdmenu');
+
+        $this->put('/deyvo/seo', [
+            'seo' => [
+                'title' => 'Deyvo',
+                'description' => 'Core SEO defaults.',
+                'canonical_url' => 'https://deyvo.test',
+                'og_image' => 'https://deyvo.test/og.jpg',
+                'indexable' => '1',
+            ],
+        ])->assertRedirect(route('deyvo.dashboard.seo.index'));
+
+        self::assertSame('Deyvo', deyvo_seo()['title']);
+        self::assertSame('index,follow', deyvo_seo()['robots']);
+
+        $this->post('/deyvo/settings', [
+            'key' => 'contact.socials',
+            'label' => 'Social links',
+            'group' => 'Contact',
+            'type' => 'json',
+            'value' => '{"linkedin":"https://linkedin.test/deyvo"}',
+        ])->assertRedirect(route('deyvo.dashboard.settings.index'));
+
+        self::assertSame('https://linkedin.test/deyvo', SiteSettings::get('contact.socials')['linkedin']);
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('Media')
+            ->assertSee('Menu’s')
+            ->assertSee('SEO')
+            ->assertSee('Users');
+    }
+
+    public function test_core_seeds_defaults_and_imports_legacy_cms_tables(): void
+    {
+        $this->artisan('deyvo:seed-cms')->assertSuccessful();
+
+        self::assertSame([], deyvo_menu('header'));
+        self::assertTrue(SiteSettings::get('seo.indexable'));
+
+        Schema::create('settings', function (Blueprint $table): void {
+            $table->id();
+            $table->string('key');
+            $table->string('value')->nullable();
+        });
+        Schema::create('contents', function (Blueprint $table): void {
+            $table->id();
+            $table->string('key');
+            $table->string('title');
+            $table->text('body')->nullable();
+            $table->boolean('is_published')->default(false);
+        });
+        Schema::create('menus', function (Blueprint $table): void {
+            $table->id();
+            $table->string('key');
+            $table->string('title');
+            $table->json('items');
+            $table->boolean('is_active')->default(true);
+        });
+        Schema::create('pages', function (Blueprint $table): void {
+            $table->id();
+            $table->string('slug');
+            $table->string('title');
+            $table->boolean('is_published')->default(true);
+        });
+
+        \Illuminate\Support\Facades\DB::table('settings')->insert([
+            'key' => 'contact.email',
+            'value' => 'legacy@deyvo.test',
+        ]);
+        \Illuminate\Support\Facades\DB::table('contents')->insert([
+            'key' => 'homepage.intro',
+            'title' => 'Intro',
+            'body' => 'Legacy intro',
+            'is_published' => true,
+        ]);
+        \Illuminate\Support\Facades\DB::table('menus')->insert([
+            'key' => 'footer',
+            'title' => 'Footer',
+            'items' => '[{"label":"Contact","url":"/contact"}]',
+            'is_active' => true,
+        ]);
+        \Illuminate\Support\Facades\DB::table('pages')->insert([
+            'slug' => 'legacy',
+            'title' => 'Legacy pagina',
+            'is_published' => true,
+        ]);
+
+        $this->artisan('deyvo:import-legacy-cms')->assertSuccessful();
+
+        self::assertSame('legacy@deyvo.test', SiteSettings::get('contact.email'));
+        self::assertSame('Legacy intro', SiteContent::body('homepage.intro'));
+        self::assertSame('Contact', deyvo_menu('footer')[0]['label']);
+        self::assertSame('legacy', Page::query()->where('key', 'legacy')->firstOrFail()->published_slug);
     }
 
     public function test_dashboard_records_attributed_activity_and_renders_it(): void

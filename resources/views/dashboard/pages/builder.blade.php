@@ -1,12 +1,14 @@
 @php($oldBlocks = old('blocks'))
 @php($blocks = is_string($oldBlocks) ? json_decode($oldBlocks, true) : ($revision?->blocks ?? []))
 @php($blocks = is_array($blocks) && array_is_list($blocks) ? $blocks : [])
+@php($mediaItems = \Deyvo\Core\Models\Media::query()->orderBy('name')->limit(200)->get(['id', 'name', 'path', 'url'])->map(fn ($item) => ['id' => (string) $item->id, 'name' => $item->name, 'path' => $item->path, 'url' => $item->url])->all())
 
 <section class="border border-neutral-200 bg-white shadow-sm" data-deyvo-builder>
     <input type="hidden" name="blocks" value="{{ json_encode($blocks, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}" data-deyvo-builder-input>
 
     <script type="application/json" data-deyvo-builder-blocks>@json($blocks, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)</script>
     <script type="application/json" data-deyvo-builder-types>@json($blockTypes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)</script>
+    <script type="application/json" data-deyvo-builder-media>@json($mediaItems, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)</script>
 
     <div class="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 px-5 py-4">
         <div>

@@ -41,7 +41,7 @@ Use `DEYVO_CORE_STYLES_ENABLED=false` for the same setting through the environme
 
 ## Dashboard Activity
 
-Core uses the authenticated user supplied by the host application. It does not add users, login or permissions itself. Dashboard changes, page revisions, previews and unexpected dashboard errors are written to `deyvo_audit_logs` with an actor snapshot, request-id, request path and structured context.
+Core uses the authenticated user supplied by the host application. It can manage the configured Laravel user model, but login, roles and permissions stay in the host application. Dashboard changes, page revisions, previews and unexpected dashboard errors are written to `deyvo_audit_logs` with an actor snapshot, request-id, request path and structured context.
 
 Run `php artisan migrate` after updating Core. The dashboard exposes these records through **Activiteit**. Existing revisions remain available and show `Onbekend` until a new change is made.
 
@@ -122,14 +122,31 @@ DEYVO_DASHBOARD_ENABLED=true
 php artisan migrate
 ```
 
-The dashboard is available at `/deyvo` and uses the host application's `auth` middleware by default. It manages reusable content and sitewide settings without providing authentication itself.
+The dashboard is available at `/deyvo` and uses the host application's `auth` middleware by default. It manages reusable content, pages, sitewide settings, SEO defaults, media, menus and users without providing authentication itself.
 
 ```php
 use Deyvo\Core\Support\SiteContent;
+use Deyvo\Core\Support\SiteMedia;
+use Deyvo\Core\Support\SiteMenus;
 use Deyvo\Core\Support\SiteSettings;
 
 $intro = SiteContent::body('homepage.intro');
 $email = SiteSettings::get('contact.email');
+$header = SiteMenus::get('header');
+$image = SiteMedia::url(1);
+```
+
+Seed Core's default contact, SEO and menu records when bootstrapping a site.
+
+```bash
+php artisan deyvo:seed-cms
+```
+
+Import old host-owned CMS tables after running the Core migrations.
+
+```bash
+php artisan deyvo:import-legacy-cms
+php artisan deyvo:import-legacy-cms --dry-run
 ```
 
 Additional packages can register their own dashboard navigation items from a service provider.
@@ -161,7 +178,7 @@ Set its relative or absolute path in the host application's config/deyvo-core.ph
         ],
     ],
 
-The schema supports text, textarea, html, email, url, select, and boolean fields. Values use the existing deyvo_settings table by default. Set storage to content for text that should be available through SiteContent.
+The schema supports text, textarea, html, email, url, media, select, and boolean fields. Values use the existing deyvo_settings table by default. Set storage to content for text that should be available through SiteContent.
 
     {
       "pages": [
@@ -329,7 +346,29 @@ Add deyvoEditor once near the end of the host layout and include the Core JavaSc
 
 When a dashboard preview is active, `@deyvoEditor` renders a fixed overlay with the page title, path, draft version, save state and actions for the dashboard or leaving editor mode. Visitors never receive the overlay.
 
-The inline editor supports the schema field types text, textarea, email, url, select, and boolean. HTML fields use the dashboard code editor. Both save concepts through the authenticated dashboard route. Media, menus, and legacy-data import are intentionally separate modules or migration work.
+The inline editor supports the schema field types text, textarea, email, url, select, and boolean. HTML fields use the dashboard code editor. Media fields use Core media records in the dashboard forms and builder. Edits save concepts through the authenticated dashboard route.
+
+## Media, Menus, SEO And Users
+
+Core owns the dashboard screens, routes, models, migrations and helpers for the CMS domains that used to live in host applications.
+
+```blade
+@foreach (deyvo_menu('header') as $item)
+    <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+@endforeach
+
+<img src="{{ deyvo_media_url(deyvo_setting('homepage.hero_image')) }}" alt="">
+```
+
+SEO defaults are stored as typed settings and can be read with `deyvo_seo()`.
+
+```blade
+@php($seo = deyvo_seo('home'))
+<title>{{ $seo['title'] }}</title>
+<meta name="robots" content="{{ $seo['robots'] }}">
+```
+
+The users screen uses the configured Laravel user model from `DEYVO_USERS_MODEL` or `auth.providers.users.model`. Core still relies on the host application's auth middleware and permission policy.
 
 ## Block Builder
 
@@ -413,7 +452,7 @@ Render a page's blocks in its public Blade view.
 <x-deyvo::blocks page="home" />
 ```
 
-Core includes neutral views for `html`, `hero`, `text`, `quote`, `call-to-action` and `divider`. Override an individual block in the host application with `resources/views/deyvo-blocks/{block-type}.blade.php`. The view receives a `$block` array with `id`, `type` and `data`.
+Core includes neutral views for `html`, `hero`, `image`, `text`, `quote`, `call-to-action` and `divider`. Override an individual block in the host application with `resources/views/deyvo-blocks/{block-type}.blade.php`. The view receives a `$block` array with `id`, `type` and `data`.
 
 The package dashboard is a standalone layout. It uses Laravel's standard Vite entrypoints by default, so its Tailwind styles and builder JavaScript load without a published package config. Configure `dashboard.vite` only when the host uses other entrypoints.
 

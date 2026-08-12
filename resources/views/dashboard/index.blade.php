@@ -13,24 +13,24 @@
         </div>
     </div>
 
-    <dl data-deyvo-dashboard-stats @class([
-        'mt-8 grid gap-4 sm:grid-cols-2',
-        'xl:grid-cols-3' => ! config('deyvo-core.dashboard.pages.enabled', false),
-        'xl:grid-cols-5' => config('deyvo-core.dashboard.pages.enabled', false),
-    ])>
-        <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
-            <dt class="text-sm font-medium text-neutral-600">Content items</dt>
-            <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $contentCount }}</dd>
-        </div>
-        <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
-            <dt class="text-sm font-medium text-neutral-600">Gepubliceerd</dt>
-            <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $publishedContentCount }}</dd>
-        </div>
-        <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
-            <dt class="text-sm font-medium text-neutral-600">Instellingen</dt>
-            <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $settingCount }}</dd>
-        </div>
-        @if (config('deyvo-core.dashboard.pages.enabled', false))
+    <dl data-deyvo-dashboard-stats class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @if ($widgets['content'] ?? true)
+            <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+                <dt class="text-sm font-medium text-neutral-600">Content items</dt>
+                <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $contentCount }}</dd>
+            </div>
+            <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+                <dt class="text-sm font-medium text-neutral-600">Gepubliceerd</dt>
+                <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $publishedContentCount }}</dd>
+            </div>
+        @endif
+        @if ($widgets['settings'] ?? true)
+            <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+                <dt class="text-sm font-medium text-neutral-600">Instellingen</dt>
+                <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $settingCount }}</dd>
+            </div>
+        @endif
+        @if (($widgets['pages'] ?? true) && config('deyvo-core.dashboard.pages.enabled', false))
             <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
                 <dt class="text-sm font-medium text-neutral-600">Pagina’s</dt>
                 <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $pageCount }}</dd>
@@ -38,6 +38,18 @@
             <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
                 <dt class="text-sm font-medium text-neutral-600">Pagina’s live</dt>
                 <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $publishedPageCount }}</dd>
+            </div>
+        @endif
+        @if (($widgets['media'] ?? true) && config('deyvo-core.dashboard.media.enabled', true))
+            <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+                <dt class="text-sm font-medium text-neutral-600">Media</dt>
+                <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $mediaCount }}</dd>
+            </div>
+        @endif
+        @if (($widgets['menus'] ?? true) && config('deyvo-core.dashboard.menus.enabled', true))
+            <div data-deyvo-dashboard-stat class="rounded-md border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+                <dt class="text-sm font-medium text-neutral-600">Menu’s</dt>
+                <dd class="mt-2 text-3xl font-semibold text-neutral-950">{{ $menuCount }}</dd>
             </div>
         @endif
     </dl>
@@ -70,9 +82,41 @@
                 <a href="{{ route('deyvo.dashboard.pages.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Pagina’s beheren</a>
             </section>
         @endif
+
+        @if (config('deyvo-core.dashboard.media.enabled', true))
+            <section class="border-t border-neutral-300 pt-5">
+                <h2 class="text-base font-semibold text-neutral-950">Media</h2>
+                <p class="mt-2 text-sm leading-6 text-neutral-600">Beheer afbeeldingen, downloads en mappen voor hergebruik in pagina’s en templates.</p>
+                <a href="{{ route('deyvo.dashboard.media.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Media beheren</a>
+            </section>
+        @endif
+
+        @if (config('deyvo-core.dashboard.menus.enabled', true))
+            <section class="border-t border-neutral-300 pt-5">
+                <h2 class="text-base font-semibold text-neutral-950">Menu’s</h2>
+                <p class="mt-2 text-sm leading-6 text-neutral-600">Onderhoud header-, footer- en campagnemenu’s als beheerde JSON-structuren.</p>
+                <a href="{{ route('deyvo.dashboard.menus.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Menu’s beheren</a>
+            </section>
+        @endif
+
+        @if (config('deyvo-core.dashboard.seo.enabled', true))
+            <section class="border-t border-neutral-300 pt-5">
+                <h2 class="text-base font-semibold text-neutral-950">SEO</h2>
+                <p class="mt-2 text-sm leading-6 text-neutral-600">Stel globale titels, descriptions, indexering en social previews in.</p>
+                <a href="{{ route('deyvo.dashboard.seo.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">SEO beheren</a>
+            </section>
+        @endif
+
+        @if (config('deyvo-core.dashboard.users.enabled', true))
+            <section class="border-t border-neutral-300 pt-5">
+                <h2 class="text-base font-semibold text-neutral-950">Users</h2>
+                <p class="mt-2 text-sm leading-6 text-neutral-600">Gebruik het Laravel user-model zonder host-specifieke dashboardcontrollers.</p>
+                <a href="{{ route('deyvo.dashboard.users.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Users beheren</a>
+            </section>
+        @endif
     </div>
 
-    @if (config('deyvo-core.audit.enabled', true))
+    @if (($widgets['activity'] ?? true) && config('deyvo-core.audit.enabled', true))
         <section class="mt-10 border-t border-neutral-300 pt-5">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>

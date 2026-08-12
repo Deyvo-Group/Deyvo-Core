@@ -13,7 +13,11 @@ return new class extends Migration
         Schema::create('deyvo_settings', function (Blueprint $table): void {
             $table->id();
             $table->string('key', 120)->unique();
+            $table->string('label', 160)->nullable();
+            $table->string('group', 80)->default('Algemeen')->index();
+            $table->string('type', 40)->default('text')->index();
             $table->text('value')->nullable();
+            $table->json('options')->nullable();
             $table->timestamps();
         });
     }

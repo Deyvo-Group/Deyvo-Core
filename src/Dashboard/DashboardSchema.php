@@ -15,6 +15,7 @@ final class DashboardSchema
         'email',
         'html',
         'url',
+        'media',
         'select',
         'boolean',
     ];

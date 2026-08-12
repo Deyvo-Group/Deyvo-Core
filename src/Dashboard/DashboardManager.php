@@ -43,12 +43,48 @@ final class DashboardManager
             ];
         }
 
+        if (config('deyvo-core.dashboard.media.enabled', true)) {
+            $navigation[] = [
+                'label' => 'Media',
+                'route' => 'deyvo.dashboard.media.index',
+                'active' => 'deyvo.dashboard.media.*',
+                'sort' => 22,
+            ];
+        }
+
+        if (config('deyvo-core.dashboard.menus.enabled', true)) {
+            $navigation[] = [
+                'label' => 'Menu’s',
+                'route' => 'deyvo.dashboard.menus.index',
+                'active' => 'deyvo.dashboard.menus.*',
+                'sort' => 24,
+            ];
+        }
+
         if ($this->layouts() !== []) {
             $navigation[] = [
                 'label' => 'Layout',
                 'route' => 'deyvo.dashboard.layouts.index',
                 'active' => 'deyvo.dashboard.layouts.*',
                 'sort' => 25,
+            ];
+        }
+
+        if (config('deyvo-core.dashboard.seo.enabled', true)) {
+            $navigation[] = [
+                'label' => 'SEO',
+                'route' => 'deyvo.dashboard.seo.index',
+                'active' => 'deyvo.dashboard.seo.*',
+                'sort' => 28,
+            ];
+        }
+
+        if (config('deyvo-core.dashboard.users.enabled', true)) {
+            $navigation[] = [
+                'label' => 'Users',
+                'route' => 'deyvo.dashboard.users.index',
+                'active' => 'deyvo.dashboard.users.*',
+                'sort' => 32,
             ];
         }
 

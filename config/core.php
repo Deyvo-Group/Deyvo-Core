@@ -35,6 +35,14 @@ return [
         'path' => env('DEYVO_DASHBOARD_PATH', 'deyvo'),
         'middleware' => ['web', 'auth'],
         'logout_route' => env('DEYVO_DASHBOARD_LOGOUT_ROUTE', 'logout'),
+        'widgets' => [
+            'content' => true,
+            'settings' => true,
+            'pages' => true,
+            'media' => true,
+            'menus' => true,
+            'activity' => true,
+        ],
         'schema' => [
             'path' => env('DEYVO_DASHBOARD_SCHEMA_PATH'),
         ],
@@ -44,6 +52,22 @@ return [
         ],
         'pages' => [
             'enabled' => env('DEYVO_PAGES_ENABLED', false),
+        ],
+        'media' => [
+            'enabled' => env('DEYVO_MEDIA_ENABLED', true),
+            'disk' => env('DEYVO_MEDIA_DISK', 'public'),
+            'directory' => env('DEYVO_MEDIA_DIRECTORY', 'deyvo'),
+            'delete_files' => env('DEYVO_MEDIA_DELETE_FILES', false),
+        ],
+        'menus' => [
+            'enabled' => env('DEYVO_MENUS_ENABLED', true),
+        ],
+        'seo' => [
+            'enabled' => env('DEYVO_SEO_ENABLED', true),
+        ],
+        'users' => [
+            'enabled' => env('DEYVO_USERS_ENABLED', true),
+            'model' => env('DEYVO_USERS_MODEL'),
         ],
         'navigation' => [
             [
@@ -63,6 +87,70 @@ return [
                 'route' => 'deyvo.dashboard.settings.index',
                 'active' => 'deyvo.dashboard.settings.*',
                 'sort' => 30,
+            ],
+        ],
+    ],
+
+    'settings' => [
+        'types' => [
+            'text',
+            'textarea',
+            'email',
+            'url',
+            'boolean',
+            'integer',
+            'float',
+            'json',
+        ],
+        'defaults' => [
+            [
+                'key' => 'contact.email',
+                'label' => 'E-mailadres',
+                'group' => 'Contact',
+                'type' => 'email',
+                'value' => null,
+            ],
+            [
+                'key' => 'contact.phone',
+                'label' => 'Telefoon',
+                'group' => 'Contact',
+                'type' => 'text',
+                'value' => null,
+            ],
+            [
+                'key' => 'contact.socials',
+                'label' => 'Social links',
+                'group' => 'Contact',
+                'type' => 'json',
+                'value' => [],
+            ],
+            [
+                'key' => 'seo.title',
+                'label' => 'Standaard paginatitel',
+                'group' => 'SEO',
+                'type' => 'text',
+                'value' => null,
+            ],
+            [
+                'key' => 'seo.description',
+                'label' => 'Standaard metabeschrijving',
+                'group' => 'SEO',
+                'type' => 'textarea',
+                'value' => null,
+            ],
+            [
+                'key' => 'seo.indexable',
+                'label' => 'Indexeer website',
+                'group' => 'SEO',
+                'type' => 'boolean',
+                'value' => true,
+            ],
+            [
+                'key' => 'seo.og_image',
+                'label' => 'Social image',
+                'group' => 'SEO',
+                'type' => 'url',
+                'value' => null,
             ],
         ],
     ],
