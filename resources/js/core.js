@@ -295,6 +295,7 @@ if (builder instanceof HTMLElement) {
   };
   const initialBlocks = readJson('[data-deyvo-builder-blocks]', []);
   const blockTypes = readJson('[data-deyvo-builder-types]', []);
+  const mediaItems = readJson('[data-deyvo-builder-media]', []);
   const input = builder.querySelector('[data-deyvo-builder-input]');
   const list = builder.querySelector('[data-deyvo-builder-list]');
   const inspector = builder.querySelector('[data-deyvo-builder-inspector]');
@@ -476,7 +477,22 @@ if (builder instanceof HTMLElement) {
       return wrapper;
     }
 
-    if (field.type === 'textarea') {
+    if (field.type === 'media') {
+      control = document.createElement('select');
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Geen media';
+      control.append(placeholder);
+
+      mediaItems.forEach((item) => {
+        const choice = document.createElement('option');
+        choice.value = String(item.id);
+        choice.textContent = item.name ?? item.path ?? item.url ?? String(item.id);
+        choice.selected = String(item.id) === String(value);
+        control.append(choice);
+      });
+    } else if (field.type === 'textarea') {
       control = document.createElement('textarea');
       control.rows = 6;
       control.value = typeof value === 'string' ? value : '';

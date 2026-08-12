@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Deyvo\Core\Providers;
 
 use Deyvo\Core\Dashboard\DashboardManager;
+use Deyvo\Core\Console\Commands\ImportLegacyCmsCommand;
+use Deyvo\Core\Console\Commands\SeedCmsCommand;
 use Deyvo\Core\Http\Middleware\LocaleMiddleware;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Http\Middleware\SecurityHeadersMiddleware;
@@ -75,6 +77,13 @@ class CoreServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../../resources/dashboard-schema.json' => resource_path('deyvo/dashboard.json'),
         ], 'deyvo-dashboard-schema');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ImportLegacyCmsCommand::class,
+                SeedCmsCommand::class,
+            ]);
+        }
     }
 
     private function registerMiddleware(Router $router): void

@@ -12,6 +12,32 @@ final class Setting extends Model
 
     protected $fillable = [
         'key',
+        'label',
+        'group',
+        'type',
         'value',
+        'options',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'options' => 'array',
+        ];
+    }
+
+    public function typedValue(mixed $default = null): mixed
+    {
+        if ($this->value === null) {
+            return $default;
+        }
+
+        return match ($this->type) {
+            'boolean' => filter_var($this->value, FILTER_VALIDATE_BOOLEAN),
+            'integer' => (int) $this->value,
+            'float' => (float) $this->value,
+            'json', 'array' => json_decode($this->value, true) ?? $default,
+            default => $this->value,
+        };
+    }
 }

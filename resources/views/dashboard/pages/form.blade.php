@@ -76,6 +76,8 @@
                                         <option value="{{ $option['value'] }}" @selected($value === $option['value'])>{{ $option['label'] }}</option>
                                     @endforeach
                                 </select>
+                            @elseif ($field['type'] === 'media')
+                                <x-deyvo::media-picker name="sections[{{ $section['key'] }}][{{ $field['key'] }}]" :value="$value" />
                             @else
                                 <input id="{{ $fieldId }}" type="{{ $field['type'] }}" name="sections[{{ $section['key'] }}][{{ $field['key'] }}]" value="{{ $value }}" placeholder="{{ $field['placeholder'] }}" class="mt-2 block w-full rounded-md border-neutral-300 text-sm text-neutral-950 shadow-sm focus:border-neutral-950 focus:ring-neutral-950">
                             @endif

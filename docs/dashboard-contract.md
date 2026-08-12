@@ -29,6 +29,18 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
     'pages' => [
         'enabled' => true,
     ],
+    'media' => [
+        'enabled' => true,
+    ],
+    'menus' => [
+        'enabled' => true,
+    ],
+    'seo' => [
+        'enabled' => true,
+    ],
+    'users' => [
+        'enabled' => true,
+    ],
 ],
 ~~~
 
@@ -40,8 +52,12 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
 | schema.path | Absoluut pad of pad relatief aan de hostroot | Core leest dit JSON-bestand lokaal. |
 | vite | Array met bestaande Vite-entrypoints van de host | Laadt Tailwind en de Core-JavaScript in het zelfstandige dashboard. Standaard gebruikt Core `resources/css/app.css` en `resources/js/app.js`. |
 | pages.enabled | Boolean | Activeert pagina’s, revisies, preview en editorroutes. |
+| media.enabled | Boolean | Activeert media, folders, media picker en helperroutes. |
+| menus.enabled | Boolean | Activeert menubeheer en publieke menuhelpers. |
+| seo.enabled | Boolean | Activeert globale SEO-defaults. |
+| users.enabled | Boolean | Activeert beheer via het geconfigureerde Laravel user-model. |
 
-Core levert geen login, users, rollen, permissions, uploads of mediafunctionaliteit. De website levert de middleware die toegang tot het dashboard geeft.
+Core levert geen login, rollen of permissies. De website levert de middleware die toegang tot het dashboard geeft; Core levert wel de dashboardroutes, modellen, views, migraties en helpers voor content, pages, settings, SEO, media, menu’s en users.
 
 ## Dashboard JSON
 
@@ -170,7 +186,7 @@ Een item in pages verschijnt als een extra dashboardonderdeel.
 | --- | --- | --- | --- |
 | key | Kleine letters, cijfers, punten, underscores en koppeltekens | Verplicht | Sleutel in deyvo_settings of deyvo_contents. |
 | label | Niet-lege tekst | Verplicht | Formulierlabel. |
-| type | text, textarea, html, email, url, select of boolean | text | Invoer en validatie. |
+| type | text, textarea, html, email, url, media, select of boolean | text | Invoer en validatie. |
 | storage | setting of content | setting | Doeltabel. |
 | required | Boolean | false | Vereist een waarde. |
 | help | Tekst | null | Hulptekst onder het veld. |
@@ -290,7 +306,7 @@ Een template definieert de bewerkbare secties van een pagina. Maak een template 
 | sections[].key | Kleine letters, cijfers, underscores en koppeltekens | Sleutel in de revisie-JSON. |
 | sections[].fields | Niet-lege array | Bewerkbare paginawaarden. |
 
-Templatevelden ondersteunen text, textarea, html, email, url, select en boolean. Dezelfde validatieregels voor required, help, placeholder en options gelden als bij algemene instellingen.
+Templatevelden ondersteunen text, textarea, html, email, url, media, select en boolean. Dezelfde validatieregels voor required, help, placeholder en options gelden als bij algemene instellingen.
 
 ## Blokbuilder
 
@@ -357,7 +373,7 @@ Een buildertemplate heeft geen verplichte secties. De template geeft expliciet o
 | builder.blocks | Niet-lege array met bekende blokkeys | De enige blokken die op de template mogen staan. |
 | sections | Array | Mag leeg zijn bij een actieve builder. |
 
-Blokvelden gebruiken dezelfde types en validatie als templatevelden: text, textarea, html, email, url, select en boolean. Een beheerder kan blokken toevoegen, selecteren, verplaatsen, dupliceren en verwijderen. De inspector schrijft alle veldwaarden naar een verborgen JSON-invoer; het gewone paginaformulier bewaart vervolgens een nieuw concept.
+Blokvelden gebruiken dezelfde types en validatie als templatevelden: text, textarea, html, email, url, media, select en boolean. Een beheerder kan blokken toevoegen, selecteren, verplaatsen, dupliceren en verwijderen. De inspector schrijft alle veldwaarden naar een verborgen JSON-invoer; het gewone paginaformulier bewaart vervolgens een nieuw concept.
 
 ### HTML-codeblok
 
@@ -385,7 +401,7 @@ Neem dit blok op in `builder.blocks` van een template. Beheerders kunnen het dan
 
 Core ontsmet HTML bij het opslaan en vlak voor het renderen. Structurele HTML en veilige links blijven staan. Scripts, styles, event-handlers, forms, embeds, SVG en onveilige URL's worden verwijderd. Gebruik dit blok niet voor JavaScript, CSS, trackingcodes, authenticatie of media-embeds.
 
-Core publiceert een bruikbaar startschema met html, hero, text, quote, call-to-action en divider. Dit startschema bevat een standaardpage-template met de builder ingeschakeld. De website mag dit schema uitbreiden of vervangen.
+Core publiceert een bruikbaar startschema met html, hero, image, text, quote, call-to-action en divider. Dit startschema bevat een standaardpage-template met de builder ingeschakeld. De website mag dit schema uitbreiden of vervangen.
 
 ### Revisieblokken
 
@@ -459,6 +475,19 @@ Alle routes gebruiken dashboard.path en dashboard.middleware.
 
 | Methode | Route | Naam | Resultaat |
 | --- | --- | --- | --- |
+| GET | /dashboard | deyvo.dashboard.index | Dashboardoverzicht met widgets en activiteit. |
+| GET | /dashboard/content | deyvo.dashboard.contents.index | Contentoverzicht. |
+| POST | /dashboard/content | deyvo.dashboard.contents.store | Maakt content aan. |
+| GET | /dashboard/settings | deyvo.dashboard.settings.index | Typed settings per groep. |
+| POST | /dashboard/settings | deyvo.dashboard.settings.store | Maakt een setting aan. |
+| GET | /dashboard/media | deyvo.dashboard.media.index | Media en folders. |
+| POST | /dashboard/media | deyvo.dashboard.media.store | Registreert upload, pad of externe URL. |
+| POST | /dashboard/media/folders | deyvo.dashboard.media.folders.store | Maakt een folder. |
+| GET | /dashboard/menus | deyvo.dashboard.menus.index | Menubeheer. |
+| POST | /dashboard/menus | deyvo.dashboard.menus.store | Maakt een menu met JSON-items. |
+| GET | /dashboard/seo | deyvo.dashboard.seo.index | Globale SEO-defaults. |
+| PUT | /dashboard/seo | deyvo.dashboard.seo.update | Slaat SEO-defaults op als typed settings. |
+| GET | /dashboard/users | deyvo.dashboard.users.index | Userbeheer via het Laravel user-model. |
 | GET | /dashboard/pages | deyvo.dashboard.pages.index | Pagina-overzicht. |
 | GET | /dashboard/pages/create | deyvo.dashboard.pages.create | Formulier voor nieuw concept. |
 | POST | /dashboard/pages | deyvo.dashboard.pages.store | Maakt pagina en eerste conceptrevisie. |
@@ -517,6 +546,7 @@ import '../../vendor/deyvo/core/resources/js/core.js';
 
 ~~~blade
 {{ deyvo_content('home.hero.intro', 'Bestaande introductie') }}
+{{ deyvo_setting('contact.email', 'info@example.com') }}
 ~~~
 
 Deyvo_content verwacht pagina.sectie.veld en geeft een gepubliceerde waarde terug. Tijdens een previewsessie geeft de helper de conceptwaarde terug. De fallback blijft zichtbaar zolang de pagina of waarde nog niet bestaat.
@@ -552,7 +582,23 @@ Of vraag de ruwe, geordende blokdata op voor een eigen loop.
 @endforeach
 ~~~
 
-Core levert standaardviews voor hero, text, quote, call-to-action en divider. Een host overschrijft de weergave van een blok door resources/views/deyvo-blocks/{bloktype}.blade.php te maken. De view ontvangt altijd een array in $block met id, type en data. Daarmee blijven design en domeinspecifieke markup van de website, terwijl Core de blokdata, concepten en publicatie beheert.
+Core levert standaardviews voor hero, image, text, quote, call-to-action en divider. Een host overschrijft de weergave van een blok door resources/views/deyvo-blocks/{bloktype}.blade.php te maken. De view ontvangt altijd een array in $block met id, type en data. Daarmee blijven design en domeinspecifieke markup van de website, terwijl Core de blokdata, concepten en publicatie beheert.
+
+### Media, menu en SEO helpers
+
+~~~blade
+@foreach (deyvo_menu('header') as $item)
+    <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+@endforeach
+
+<img src="{{ deyvo_media_url(1) }}" alt="">
+
+@php($seo = deyvo_seo('home'))
+<title>{{ $seo['title'] }}</title>
+<meta name="robots" content="{{ $seo['robots'] }}">
+~~~
+
+`deyvo_media_url` accepteert een media-id, pad of externe URL. `deyvo_seo` combineert pagina-SEO met globale defaults uit typed settings.
 
 ## Previewroute
 
@@ -573,7 +619,5 @@ De resolver ontvangt de Core-pagina en de te previewen revisie en moet een URL v
 ## Grenzen
 
 - Rich text en geneste blokken worden niet ondersteund door dit contract.
-- Menu’s zijn nog geen Core-module.
-- Media wacht op de zelfstandige Deyvo Media-module.
-- Oude tabellen worden niet automatisch geïmporteerd.
-- Een legacy-import hoort in een expliciete, herhaalbare importmodule met dry-run, conflictmelding en een brondatamapping per website.
+- Core gebruikt het host-authsysteem voor toegang, rollen en permissies.
+- Legacy-import is expliciet: gebruik `php artisan deyvo:import-legacy-cms` of eerst `--dry-run`.
