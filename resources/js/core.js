@@ -17,6 +17,31 @@ if (document.readyState === 'loading') {
   loadStyles();
 }
 
+const mountHtmlEditor = async (parent, value, onUpdate) => {
+  const { createHtmlEditor } = await import('./vendor/codemirror-html.js');
+
+  return createHtmlEditor({ parent, value, onUpdate });
+};
+
+document.querySelectorAll('textarea[data-deyvo-html-source]').forEach((source) => {
+  if (!(source instanceof HTMLTextAreaElement)) {
+    return;
+  }
+
+  const editor = document.createElement('div');
+  editor.setAttribute('data-deyvo-html-editor', '');
+  source.before(editor);
+  source.hidden = true;
+
+  mountHtmlEditor(editor, source.value, (value) => {
+    source.value = value;
+    source.dispatchEvent(new Event('input', { bubbles: true }));
+  }).catch(() => {
+    editor.remove();
+    source.hidden = false;
+  });
+});
+
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) {
     return;
@@ -281,6 +306,7 @@ if (builder instanceof HTMLElement) {
   const types = new Map(Array.isArray(blockTypes) ? blockTypes.map((type) => [type.key, type]) : []);
   let blocks = Array.isArray(initialBlocks) ? initialBlocks : [];
   let selectedId = blocks[0]?.id ?? null;
+  let codeEditors = [];
 
   const createId = () => {
     if (typeof globalThis.crypto?.randomUUID === 'function') {
@@ -419,6 +445,37 @@ if (builder instanceof HTMLElement) {
   const controlFor = (field, value, update) => {
     let control;
 
+    if (field.type === 'html') {
+      const wrapper = document.createElement('div');
+      const editor = document.createElement('div');
+      const source = typeof value === 'string' ? value : '';
+      wrapper.setAttribute('data-deyvo-html-editor', '');
+      wrapper.append(editor);
+
+      mountHtmlEditor(editor, source, (nextValue) => {
+        update(nextValue);
+        serialise();
+      }).then((view) => {
+        if (wrapper.isConnected) {
+          codeEditors.push(view);
+        } else {
+          view.destroy();
+        }
+      }).catch(() => {
+        const fallback = document.createElement('textarea');
+        fallback.rows = 12;
+        fallback.value = source;
+        fallback.className = 'mt-2 block w-full border-neutral-300 text-sm text-neutral-950 shadow-sm focus:border-neutral-950 focus:ring-neutral-950';
+        fallback.addEventListener('input', () => {
+          update(fallback.value);
+          serialise();
+        });
+        wrapper.replaceChildren(fallback);
+      });
+
+      return wrapper;
+    }
+
     if (field.type === 'textarea') {
       control = document.createElement('textarea');
       control.rows = 6;
@@ -473,6 +530,8 @@ if (builder instanceof HTMLElement) {
       return;
     }
 
+    codeEditors.forEach((editor) => editor.destroy());
+    codeEditors = [];
     inspector.replaceChildren();
     const block = selectedBlock();
 

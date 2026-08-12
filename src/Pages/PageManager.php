@@ -9,6 +9,7 @@ use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Support\Actor;
 use Deyvo\Core\Support\AuditLogger;
+use Deyvo\Core\Support\HtmlSanitizer;
 use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,6 +24,7 @@ final class PageManager
         private DashboardManager $dashboard,
         private Actor $actor,
         private AuditLogger $audit,
+        private HtmlSanitizer $html,
     ) {
     }
 
@@ -220,9 +222,11 @@ final class PageManager
                 'value' => $this->rules($field),
             ]);
             $sections = $revision->sections;
-            $sections[$sectionKey][$fieldKey] = $field['type'] === 'boolean'
-                ? filter_var($value, FILTER_VALIDATE_BOOLEAN)
-                : ($validated['value'] ?? null);
+            $sections[$sectionKey][$fieldKey] = match ($field['type']) {
+                'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                'html' => $this->html->clean($validated['value'] ?? null),
+                default => $validated['value'] ?? null,
+            };
             $revision->update([
                 'sections' => $sections,
                 ...$this->actor->attributes('updated_by'),
@@ -369,9 +373,11 @@ final class PageManager
                 $validated = Validator::validate(['value' => $value], [
                     'value' => $this->rules($field),
                 ]);
-                $values[$field['key']] = $field['type'] === 'boolean'
-                    ? filter_var($value, FILTER_VALIDATE_BOOLEAN)
-                    : ($validated['value'] ?? null);
+                $values[$field['key']] = match ($field['type']) {
+                    'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                    'html' => $this->html->clean($validated['value'] ?? null),
+                    default => $validated['value'] ?? null,
+                };
             }
 
             $ids[] = $id;
@@ -417,7 +423,7 @@ final class PageManager
             return $rules;
         }
 
-        $rules[] = 'max:65535';
+        $rules[] = $field['type'] === 'html' ? 'max:100000' : 'max:65535';
 
         return $rules;
     }

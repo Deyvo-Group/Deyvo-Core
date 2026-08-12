@@ -9,6 +9,7 @@ use Deyvo\Core\Models\Content;
 use Deyvo\Core\Models\Setting;
 use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Flash;
+use Deyvo\Core\Support\HtmlSanitizer;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ final class CustomPageController
     public function __construct(
         private DashboardManager $dashboard,
         private AuditLogger $audit,
+        private HtmlSanitizer $html,
     ) {
     }
 
@@ -82,6 +84,7 @@ final class CustomPageController
             $value = $field['type'] === 'boolean'
                 ? $request->boolean("values.{$index}")
                 : ($values[$index] ?? null);
+            $value = $field['type'] === 'html' ? $this->html->clean($value) : $value;
 
             if ($field['storage'] === 'content') {
                 Content::query()->updateOrCreate(
@@ -176,7 +179,7 @@ final class CustomPageController
             return $rules;
         }
 
-        $rules[] = 'max:65535';
+        $rules[] = $field['type'] === 'html' ? 'max:100000' : 'max:65535';
 
         return $rules;
     }

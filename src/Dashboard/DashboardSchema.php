@@ -13,6 +13,7 @@ final class DashboardSchema
         'text',
         'textarea',
         'email',
+        'html',
         'url',
         'select',
         'boolean',

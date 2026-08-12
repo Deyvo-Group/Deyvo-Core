@@ -8,6 +8,7 @@ use Deyvo\Core\Dashboard\DashboardManager;
 use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Support\Actor;
+use Deyvo\Core\Support\HtmlSanitizer;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
@@ -18,6 +19,7 @@ final class PageContent
         private PagePreviewState $preview,
         private DashboardManager $dashboard,
         private Actor $actor,
+        private HtmlSanitizer $html,
     ) {
     }
 
@@ -50,6 +52,10 @@ final class PageContent
             return new HtmlString(e($this->stringValue($value)));
         }
 
+        if ($field['type'] === 'html') {
+            return new HtmlString($this->html->clean($value));
+        }
+
         $attributes = [
             'data-deyvo-field' => $key,
             'data-deyvo-path' => "{$sectionKey}.{$fieldKey}",
@@ -73,7 +79,17 @@ final class PageContent
     {
         $revision = $this->preview->revision($pageKey) ?? $this->publishedRevision($pageKey);
 
-        return is_array($revision?->blocks) ? $revision->blocks : [];
+        $blocks = is_array($revision?->blocks) ? $revision->blocks : [];
+
+        foreach ($blocks as $index => $block) {
+            if (($block['type'] ?? null) !== 'html' || ! is_array($block['data'] ?? null)) {
+                continue;
+            }
+
+            $blocks[$index]['data']['html'] = $this->html->clean($block['data']['html'] ?? null);
+        }
+
+        return $blocks;
     }
 
     public function editor(): HtmlString
