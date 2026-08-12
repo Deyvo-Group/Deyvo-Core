@@ -38,7 +38,7 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
 | path | Pad zonder begin- of eindslash | Dashboardbasis, bijvoorbeeld /dashboard. |
 | middleware | Array met hostmiddleware | Beveiligt dashboard, preview en editor. |
 | schema.path | Absoluut pad of pad relatief aan de hostroot | Core leest dit JSON-bestand lokaal. |
-| vite | Array met bestaande Vite-entrypoints van de host | Laadt Tailwind en de Core-JavaScript in het zelfstandige dashboard. |
+| vite | Array met bestaande Vite-entrypoints van de host | Laadt Tailwind en de Core-JavaScript in het zelfstandige dashboard. Standaard gebruikt Core `resources/css/app.css` en `resources/js/app.js`. |
 | pages.enabled | Boolean | Activeert pagina’s, revisies, preview en editorroutes. |
 
 Core levert geen login, users, rollen, permissions, uploads of mediafunctionaliteit. De website levert de middleware die toegang tot het dashboard geeft.
@@ -58,7 +58,7 @@ Het JSON-bestand heeft vier onafhankelijke onderdelen.
 
 pages definieert gegroepeerde algemene instellingen en content. layouts definieert globale header-, footer- of andere layoutonderdelen. blocks definieert de bouwstenen van de pagina-editor. templates definieert pagina’s met versieerbare secties of een blokbuilder.
 
-De host moet haar Tailwind- en JavaScript-entrypoints aan dashboard.vite geven.
+Core gebruikt standaard de Laravel Vite-entrypoints. Alleen websites met andere entrypoints configureren dashboard.vite expliciet.
 
 ~~~css
 @source "../../vendor/deyvo/core/resources/views/**/*.blade.php";
@@ -170,7 +170,7 @@ Een item in pages verschijnt als een extra dashboardonderdeel.
 | --- | --- | --- | --- |
 | key | Kleine letters, cijfers, punten, underscores en koppeltekens | Verplicht | Sleutel in deyvo_settings of deyvo_contents. |
 | label | Niet-lege tekst | Verplicht | Formulierlabel. |
-| type | text, textarea, email, url, select of boolean | text | Invoer en validatie. |
+| type | text, textarea, html, email, url, select of boolean | text | Invoer en validatie. |
 | storage | setting of content | setting | Doeltabel. |
 | required | Boolean | false | Vereist een waarde. |
 | help | Tekst | null | Hulptekst onder het veld. |
@@ -290,7 +290,7 @@ Een template definieert de bewerkbare secties van een pagina. Maak een template 
 | sections[].key | Kleine letters, cijfers, underscores en koppeltekens | Sleutel in de revisie-JSON. |
 | sections[].fields | Niet-lege array | Bewerkbare paginawaarden. |
 
-Templatevelden ondersteunen text, textarea, email, url, select en boolean. Dezelfde validatieregels voor required, help, placeholder en options gelden als bij algemene instellingen.
+Templatevelden ondersteunen text, textarea, html, email, url, select en boolean. Dezelfde validatieregels voor required, help, placeholder en options gelden als bij algemene instellingen.
 
 ## Blokbuilder
 
@@ -357,9 +357,35 @@ Een buildertemplate heeft geen verplichte secties. De template geeft expliciet o
 | builder.blocks | Niet-lege array met bekende blokkeys | De enige blokken die op de template mogen staan. |
 | sections | Array | Mag leeg zijn bij een actieve builder. |
 
-Blokvelden gebruiken dezelfde types en validatie als templatevelden: text, textarea, email, url, select en boolean. Een beheerder kan blokken toevoegen, selecteren, verplaatsen, dupliceren en verwijderen. De inspector schrijft alle veldwaarden naar een verborgen JSON-invoer; het gewone paginaformulier bewaart vervolgens een nieuw concept.
+Blokvelden gebruiken dezelfde types en validatie als templatevelden: text, textarea, html, email, url, select en boolean. Een beheerder kan blokken toevoegen, selecteren, verplaatsen, dupliceren en verwijderen. De inspector schrijft alle veldwaarden naar een verborgen JSON-invoer; het gewone paginaformulier bewaart vervolgens een nieuw concept.
 
-Core publiceert een bruikbaar startschema met hero, text, quote, call-to-action en divider. Dit startschema bevat een standaardpage-template met de builder ingeschakeld. De website mag dit schema uitbreiden of vervangen.
+### HTML-codeblok
+
+Het type html opent in de builder een CodeMirror 6-editor met HTML-syntaxhighlighting, tagsuggesties, automatische sluiting van tags, regelnummers en Tab-inspringing. De CodeMirror-pakketten zijn MIT-gelicentieerd en worden alleen geladen wanneer een paginaformulier een HTML-veld bevat.
+
+~~~json
+{
+  "key": "html",
+  "label": "HTML",
+  "description": "Een veilige HTML-sectie met code-editor.",
+  "category": "Aangepast",
+  "fields": [
+    {
+      "key": "html",
+      "label": "HTML",
+      "type": "html",
+      "required": true,
+      "help": "Gebruik alleen structurele HTML."
+    }
+  ]
+}
+~~~
+
+Neem dit blok op in `builder.blocks` van een template. Beheerders kunnen het dan via **Blok toevoegen** plaatsen, dupliceren, verwijderen en sorteren zoals ieder ander blok.
+
+Core ontsmet HTML bij het opslaan en vlak voor het renderen. Structurele HTML en veilige links blijven staan. Scripts, styles, event-handlers, forms, embeds, SVG en onveilige URL's worden verwijderd. Gebruik dit blok niet voor JavaScript, CSS, trackingcodes, authenticatie of media-embeds.
+
+Core publiceert een bruikbaar startschema met html, hero, text, quote, call-to-action en divider. Dit startschema bevat een standaardpage-template met de builder ingeschakeld. De website mag dit schema uitbreiden of vervangen.
 
 ### Revisieblokken
 

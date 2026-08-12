@@ -38,7 +38,10 @@ return [
         'schema' => [
             'path' => env('DEYVO_DASHBOARD_SCHEMA_PATH'),
         ],
-        'vite' => [],
+        'vite' => [
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ],
         'pages' => [
             'enabled' => env('DEYVO_PAGES_ENABLED', false),
         ],

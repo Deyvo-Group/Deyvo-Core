@@ -236,6 +236,35 @@
     border-radius: 8px;
 }
 
+[data-deyvo-html-editor] {
+    width: 100%;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(30, 64, 175, 0.24);
+    border-radius: 8px;
+    background: #282c34;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+}
+
+[data-deyvo-html-editor] .cm-editor {
+    min-height: 20rem;
+    font-size: 0.875rem;
+}
+
+[data-deyvo-html-editor] .cm-scroller {
+    min-height: 20rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-deyvo-html-editor] .cm-gutters {
+    border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-deyvo-html-editor] .cm-focused {
+    outline: 2px solid #38bdf8;
+    outline-offset: -2px;
+}
+
 [data-deyvo-dashboard] [data-deyvo-builder-list] > article {
     border-radius: 8px;
 }

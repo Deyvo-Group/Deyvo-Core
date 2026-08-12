@@ -47,6 +47,16 @@ final class CoreTest extends TestCase
         self::assertFalse(Feature::enabled('unknown'));
     }
 
+    public function test_dashboard_uses_standard_vite_entrypoints_by_default(): void
+    {
+        $configuration = require __DIR__.'/../config/core.php';
+
+        self::assertSame([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ], $configuration['dashboard']['vite']);
+    }
+
     public function test_locale_and_timezone_configuration_are_applied_to_web_routes(): void
     {
         config()->set('deyvo-core.locale.default', 'nl');
@@ -634,5 +644,70 @@ final class CoreTest extends TestCase
         $this->blade('<x-deyvo::blocks page="over-deyvo" />')
             ->assertSee('Bouw met blokken')
             ->assertSee('Deyvo Core bewaart ieder concept als revisie.');
+    }
+
+    public function test_page_builder_sanitizes_and_renders_html_blocks(): void
+    {
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'blocks' => [
+                [
+                    'key' => 'html',
+                    'label' => 'HTML',
+                    'category' => 'Aangepast',
+                    'fields' => [
+                        [
+                            'key' => 'html',
+                            'label' => 'HTML',
+                            'type' => 'html',
+                            'required' => true,
+                        ],
+                    ],
+                ],
+            ],
+            'templates' => [
+                [
+                    'key' => 'html-page',
+                    'label' => 'HTML-pagina',
+                    'builder' => [
+                        'blocks' => ['html'],
+                    ],
+                    'sections' => [],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $page = app(PageManager::class)->create([
+            'title' => 'Aangepaste pagina',
+            'slug' => 'aangepast',
+            'template' => 'html-page',
+            'sections' => [],
+            'blocks' => [
+                [
+                    'id' => 'block-html',
+                    'type' => 'html',
+                    'data' => [
+                        'html' => '<section class="custom"><h2>Veilige HTML</h2><script>alert(1)</script><details><script>alert(2)</script></details><a href="javascript:alert(1)" onclick="alert(1)">Link</a><p style="color:red">Tekst</p></section>',
+                    ],
+                ],
+            ],
+            'seo' => [
+                'indexable' => true,
+            ],
+        ]);
+
+        $revision = $page->draftRevision()->firstOrFail();
+
+        self::assertSame('<section class="custom"><h2>Veilige HTML</h2><a>Link</a><p>Tekst</p></section>', $revision->blocks[0]['data']['html']);
+
+        app(PageManager::class)->publish($page);
+        $this->get("/deyvo/pages/{$page->id}/preview")->assertRedirect('http://localhost/aangepast');
+
+        $this->blade('<x-deyvo::blocks page="aangepast" />')
+            ->assertSee('<section class="custom">', false)
+            ->assertSee('Veilige HTML')
+            ->assertDontSee('script')
+            ->assertDontSee('onclick')
+            ->assertDontSee('javascript:');
     }
 }

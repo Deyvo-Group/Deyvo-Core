@@ -3,6 +3,21 @@
   "layouts": [],
   "blocks": [
     {
+      "key": "html",
+      "label": "HTML",
+      "description": "Een veilige HTML-sectie met code-editor.",
+      "category": "Aangepast",
+      "fields": [
+        {
+          "key": "html",
+          "label": "HTML",
+          "type": "html",
+          "required": true,
+          "help": "Gebruik alleen structurele HTML. Scripts, styles en event-handlers worden verwijderd."
+        }
+      ]
+    },
+    {
       "key": "hero",
       "label": "Hero",
       "description": "Een prominente opening voor de pagina.",
@@ -123,6 +138,7 @@
         "enabled": true,
         "blocks": [
           "hero",
+          "html",
           "text",
           "quote",
           "call-to-action",

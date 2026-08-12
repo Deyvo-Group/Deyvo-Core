@@ -161,7 +161,7 @@ Set its relative or absolute path in the host application's config/deyvo-core.ph
         ],
     ],
 
-The schema supports text, textarea, email, url, select, and boolean fields. Values use the existing deyvo_settings table by default. Set storage to content for text that should be available through SiteContent.
+The schema supports text, textarea, html, email, url, select, and boolean fields. Values use the existing deyvo_settings table by default. Set storage to content for text that should be available through SiteContent.
 
     {
       "pages": [
@@ -329,7 +329,7 @@ Add deyvoEditor once near the end of the host layout and include the Core JavaSc
 
 When a dashboard preview is active, `@deyvoEditor` renders a fixed overlay with the page title, path, draft version, save state and actions for the dashboard or leaving editor mode. Visitors never receive the overlay.
 
-The inline editor supports the schema field types text, textarea, email, url, select, and boolean. It saves concepts through the authenticated dashboard route. Rich text, media, menus, and legacy-data import are intentionally separate modules or migration work.
+The inline editor supports the schema field types text, textarea, email, url, select, and boolean. HTML fields use the dashboard code editor. Both save concepts through the authenticated dashboard route. Media, menus, and legacy-data import are intentionally separate modules or migration work.
 
 ## Block Builder
 
@@ -369,21 +369,59 @@ The page editor also supports a WordPress/Gutenberg-style block builder. Add blo
 
 The editor supports inserting, selecting, reordering, duplicating, removing and configuring blocks. All block data is stored on the page revision, so it follows the existing draft, preview, publish and restore workflow.
 
+### HTML Code Blocks
+
+The builder includes an optional HTML block. It uses CodeMirror 6 with HTML completion, syntax highlighting, automatic closing tags, line numbers, and Tab indentation. CodeMirror and its HTML package are MIT licensed and the editor module is only loaded when a page form contains an HTML field.
+
+```json
+{
+  "blocks": [
+    {
+      "key": "html",
+      "label": "HTML",
+      "description": "Een veilige HTML-sectie met code-editor.",
+      "category": "Aangepast",
+      "fields": [
+        {
+          "key": "html",
+          "label": "HTML",
+          "type": "html",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "key": "builder-page",
+      "label": "Builderpagina",
+      "builder": {
+        "enabled": true,
+        "blocks": ["html"]
+      },
+      "sections": []
+    }
+  ]
+}
+```
+
+The package starter schema already includes this block. HTML is cleaned on save and again before render. Core permits structural content markup and safe links, while removing scripts, style attributes, event handlers, embeds, forms, SVG, and unsafe URLs. Do not use this block for JavaScript, CSS, tracking snippets, authentication, or media embeds.
+
 Render a page's blocks in its public Blade view.
 
 ```blade
 <x-deyvo::blocks page="home" />
 ```
 
-Core includes neutral views for `hero`, `text`, `quote`, `call-to-action` and `divider`. Override an individual block in the host application with `resources/views/deyvo-blocks/{block-type}.blade.php`. The view receives a `$block` array with `id`, `type` and `data`.
+Core includes neutral views for `html`, `hero`, `text`, `quote`, `call-to-action` and `divider`. Override an individual block in the host application with `resources/views/deyvo-blocks/{block-type}.blade.php`. The view receives a `$block` array with `id`, `type` and `data`.
 
-The package dashboard is a standalone layout. Give it the host Vite entrypoints so its Tailwind styles and builder JavaScript are loaded.
+The package dashboard is a standalone layout. It uses Laravel's standard Vite entrypoints by default, so its Tailwind styles and builder JavaScript load without a published package config. Configure `dashboard.vite` only when the host uses other entrypoints.
 
 ```php
 'dashboard' => [
     'vite' => [
-        'resources/css/app.css',
-        'resources/js/app.js',
+        'resources/css/admin.css',
+        'resources/js/admin.js',
     ],
 ],
 ```

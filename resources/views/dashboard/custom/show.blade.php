@@ -26,7 +26,9 @@
                         @else
                             <label for="{{ $fieldId }}" class="block text-sm font-medium text-neutral-900">{{ $field['label'] }}</label>
 
-                            @if ($field['type'] === 'textarea')
+                            @if ($field['type'] === 'html')
+                                <textarea id="{{ $fieldId }}" name="values[{{ $index }}]" rows="16" placeholder="{{ $field['placeholder'] }}" data-deyvo-html-source>{{ $value }}</textarea>
+                            @elseif ($field['type'] === 'textarea')
                                 <textarea id="{{ $fieldId }}" name="values[{{ $index }}]" rows="6" placeholder="{{ $field['placeholder'] }}" class="mt-2 block w-full rounded-md border-neutral-300 text-sm text-neutral-950 shadow-sm focus:border-neutral-950 focus:ring-neutral-950">{{ $value }}</textarea>
                             @elseif ($field['type'] === 'select')
                                 <select id="{{ $fieldId }}" name="values[{{ $index }}]" class="mt-2 block w-full rounded-md border-neutral-300 text-sm text-neutral-950 shadow-sm focus:border-neutral-950 focus:ring-neutral-950">
