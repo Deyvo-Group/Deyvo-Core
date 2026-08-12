@@ -27,15 +27,53 @@ final class CustomPageController
     {
         $definition = $this->page($page);
 
-        return view('deyvo::dashboard.custom.show', [
-            'page' => $definition,
-            'values' => $this->dashboard->values($definition),
-        ]);
+        return $this->form($definition, route('deyvo.dashboard.custom.update', ['page' => $page]));
     }
 
     public function update(Request $request, string $page): RedirectResponse
     {
         $definition = $this->page($page);
+
+        return $this->updateDefinition(
+            $request,
+            $definition,
+            'custom.updated',
+            ['page' => $definition['key']],
+            route('deyvo.dashboard.custom.show', ['page' => $definition['key']]),
+        );
+    }
+
+    public function showLayout(string $layout): View
+    {
+        $definition = $this->layout($layout);
+
+        return $this->form($definition, route('deyvo.dashboard.layouts.update', ['layout' => $layout]));
+    }
+
+    public function updateLayout(Request $request, string $layout): RedirectResponse
+    {
+        $definition = $this->layout($layout);
+
+        return $this->updateDefinition(
+            $request,
+            $definition,
+            'layout.updated',
+            ['layout' => $definition['key']],
+            route('deyvo.dashboard.layouts.show', ['layout' => $definition['key']]),
+        );
+    }
+
+    private function form(array $definition, string $updateUrl): View
+    {
+        return view('deyvo::dashboard.custom.show', [
+            'page' => $definition,
+            'values' => $this->dashboard->values($definition),
+            'updateUrl' => $updateUrl,
+        ]);
+    }
+
+    private function updateDefinition(Request $request, array $definition, string $event, array $context, string $redirectUrl): RedirectResponse
+    {
         $values = $this->validated($request, $definition);
         $fields = [];
 
@@ -64,15 +102,15 @@ final class CustomPageController
             );
         }
 
-        $this->audit->record('custom.updated', null, [
+        $this->audit->record($event, null, [
             'subject_label' => $definition['label'],
-            'page' => $definition['key'],
+            ...$context,
             'fields' => $fields,
         ]);
 
         Flash::success('Instellingen zijn bijgewerkt.');
 
-        return redirect()->route('deyvo.dashboard.custom.show', ['page' => $definition['key']]);
+        return redirect()->to($redirectUrl);
     }
 
     private function page(string $key): array
@@ -82,6 +120,15 @@ final class CustomPageController
         abort_unless($page !== null, 404);
 
         return $page;
+    }
+
+    private function layout(string $key): array
+    {
+        $layout = $this->dashboard->layout($key);
+
+        abort_unless($layout !== null, 404);
+
+        return $layout;
     }
 
     private function validated(Request $request, array $page): array

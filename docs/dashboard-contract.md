@@ -45,17 +45,18 @@ Core levert geen login, users, rollen, permissions, uploads of mediafunctionalit
 
 ## Dashboard JSON
 
-Het JSON-bestand heeft twee onafhankelijke onderdelen.
+Het JSON-bestand heeft vier onafhankelijke onderdelen.
 
 ~~~json
 {
   "pages": [],
+  "layouts": [],
   "blocks": [],
   "templates": []
 }
 ~~~
 
-pages definieert gegroepeerde algemene instellingen en content. blocks definieert de bouwstenen van de pagina-editor. templates definieert pagina’s met versieerbare secties of een blokbuilder.
+pages definieert gegroepeerde algemene instellingen en content. layouts definieert globale header-, footer- of andere layoutonderdelen. blocks definieert de bouwstenen van de pagina-editor. templates definieert pagina’s met versieerbare secties of een blokbuilder.
 
 De host moet haar Tailwind- en JavaScript-entrypoints aan dashboard.vite geven.
 
@@ -195,6 +196,56 @@ $intro = SiteContent::body('homepage.intro');
 ~~~
 
 SiteContent::body geeft alleen gepubliceerde content terug. Beide helpers geven de opgegeven fallback terug wanneer de sleutel nog niet bestaat.
+
+## Layoutbeheer
+
+layouts voegt een eigen **Layout**-onderdeel toe aan de dashboardnavigatie. Iedere definitie krijgt een aparte bewerkpagina. Gebruik bijvoorbeeld header en footer voor globale inhoud die op meerdere publieke pagina's verschijnt.
+
+~~~json
+{
+  "layouts": [
+    {
+      "key": "header",
+      "label": "Header",
+      "description": "Beheer navigatie en de primaire actie.",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "layout.header.primary_cta",
+          "label": "Primaire knop",
+          "type": "text",
+          "storage": "content",
+          "content_title": "Header primaire knop"
+        }
+      ]
+    },
+    {
+      "key": "footer",
+      "label": "Footer",
+      "description": "Beheer de globale footerinhoud.",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "layout.footer.brand_intro",
+          "label": "Introductie",
+          "type": "textarea",
+          "storage": "content",
+          "content_title": "Footer introductie"
+        }
+      ]
+    }
+  ]
+}
+~~~
+
+De velden hebben exact dezelfde validatie en opslagregels als algemene instellingen. Core maakt geen header- of footer-HTML: de website rendert de waarden zelf met `deyvo_content` of `SiteSettings`.
+
+~~~blade
+{{ deyvo_content('layout.header.primary_cta', 'Neem contact op') }}
+{{ deyvo_content('layout.footer.brand_intro', 'Een heldere introductie.') }}
+~~~
+
+Iedere opslagactie krijgt de activiteit `layout.updated`, met de layoutkey en gewijzigde veldsleutels. Waarden zelf komen niet in het activiteitenlog.
 
 ## Pagina-templates
 

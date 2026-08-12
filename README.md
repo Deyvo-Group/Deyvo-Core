@@ -147,7 +147,7 @@ app(DashboardManager::class)->registerNavigation(
 
 ## Custom Dashboard Schema
 
-Each host application can provide a trusted JSON schema that adds dashboard pages and fields. Deyvo Core reads this file locally; it does not expose a public endpoint that accepts dashboard definitions.
+Each host application can provide a trusted JSON schema that adds dashboard pages, global layout controls, and fields. Deyvo Core reads this file locally; it does not expose a public endpoint that accepts dashboard definitions.
 
 Publish the starter file.
 
@@ -211,6 +211,54 @@ For generated JSON, the host application can register the schema during boot.
     app(DashboardManager::class)->registerSchema(
         (string) file_get_contents(resource_path('deyvo/dashboard.json')),
     );
+
+## Header And Footer
+
+Use the schema's `layouts` array to add a dedicated **Layout** area to the dashboard. Each definition becomes a separate editable item, such as Header or Footer. Core stores the values in the existing content and settings tables and records each save in the activity log.
+
+```json
+{
+  "layouts": [
+    {
+      "key": "header",
+      "label": "Header",
+      "description": "Beheer navigatie en de primaire actie.",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "layout.header.primary_cta",
+          "label": "Primaire knop",
+          "type": "text",
+          "storage": "content",
+          "content_title": "Header primaire knop"
+        }
+      ]
+    },
+    {
+      "key": "footer",
+      "label": "Footer",
+      "description": "Beheer de globale footerinhoud.",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "layout.footer.brand_intro",
+          "label": "Introductie",
+          "type": "textarea",
+          "storage": "content",
+          "content_title": "Footer introductie"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Read published layout content in a host Blade template with the normal Core helper.
+
+```blade
+{{ deyvo_content('layout.header.primary_cta', 'Neem contact op') }}
+{{ deyvo_content('layout.footer.brand_intro', 'Een heldere introductie.') }}
+```
 
 ## Page Editor
 

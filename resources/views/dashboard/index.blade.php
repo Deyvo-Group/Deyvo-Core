@@ -55,6 +55,14 @@
             <a href="{{ route('deyvo.dashboard.settings.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Instellingen beheren</a>
         </section>
 
+        @if (app(\Deyvo\Core\Dashboard\DashboardManager::class)->layouts() !== [])
+            <section class="border-t border-neutral-300 pt-5">
+                <h2 class="text-base font-semibold text-neutral-950">Header en footer</h2>
+                <p class="mt-2 text-sm leading-6 text-neutral-600">Werk de globale inhoud bij die bezoekers in de header en footer zien.</p>
+                <a href="{{ route('deyvo.dashboard.layouts.index') }}" class="mt-4 inline-flex text-sm font-medium text-sky-700 hover:text-sky-900">Layout beheren</a>
+            </section>
+        @endif
+
         @if (config('deyvo-core.dashboard.pages.enabled', false))
             <section class="border-t border-neutral-300 pt-5">
                 <h2 class="text-base font-semibold text-neutral-950">Pagina’s</h2>
