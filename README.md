@@ -45,6 +45,16 @@ Core uses the authenticated user supplied by the host application. It can manage
 
 Run `php artisan migrate` after updating Core. The dashboard exposes these records through **Activiteit**. Existing revisions remain available and show `Onbekend` until a new change is made.
 
+## Dashboard Debug
+
+Enable the **Debug** dashboard tab with one environment flag.
+
+```env
+DEYVO_DEBUG_ENABLED=true
+```
+
+The debug screen shows dashboard config, route registration, cache state, Core table counts, page/revision diagnostics, schema status and legacy table samples. Keep it disabled outside local troubleshooting.
+
 ## Dashboard Gradient
 
 The dashboard keeps a blue Core gradient by default. Override it per website in `config/deyvo-core.php`.

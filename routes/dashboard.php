@@ -6,6 +6,7 @@ use Deyvo\Core\Http\Controllers\Dashboard\ContentController;
 use Deyvo\Core\Http\Controllers\Dashboard\ActivityLogController;
 use Deyvo\Core\Http\Controllers\Dashboard\CustomPageController;
 use Deyvo\Core\Http\Controllers\Dashboard\DashboardController;
+use Deyvo\Core\Http\Controllers\Dashboard\DebugController;
 use Deyvo\Core\Http\Controllers\Dashboard\FolderController;
 use Deyvo\Core\Http\Controllers\Dashboard\LayoutController;
 use Deyvo\Core\Http\Controllers\Dashboard\MediaController;
@@ -21,6 +22,7 @@ Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
     ->as('deyvo.dashboard.')
     ->group(function (): void {
         Route::get('/', DashboardController::class)->name('index');
+        Route::get('debug', DebugController::class)->name('debug.index');
 
         Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
         Route::get('activity/{activity}', [ActivityLogController::class, 'show'])->name('activity.show');

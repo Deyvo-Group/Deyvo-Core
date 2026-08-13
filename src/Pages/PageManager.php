@@ -101,6 +101,52 @@ final class PageManager
         return $page->draftRevision ?? $page->publishedRevision;
     }
 
+    public function editable(Page $page): PageRevision
+    {
+        $revision = $this->draft($page);
+
+        if ($revision instanceof PageRevision) {
+            return $revision;
+        }
+
+        $template = $this->templates()[0] ?? null;
+
+        if (! is_array($template)) {
+            throw new InvalidArgumentException('Deyvo cannot edit this page because no page templates are configured.');
+        }
+
+        return DB::transaction(function () use ($page, $template): PageRevision {
+            $revision = $page->revisions()->create([
+                'version' => $this->nextVersion($page),
+                'title' => $this->fallbackTitle($page),
+                'slug' => $this->fallbackSlug($page),
+                'template' => $template['key'],
+                'sections' => $this->emptySections($template),
+                'blocks' => [],
+                'seo' => [
+                    'title' => null,
+                    'description' => null,
+                    'indexable' => true,
+                ],
+                ...$this->actor->attributes('created_by'),
+                ...$this->actor->attributes('updated_by'),
+            ]);
+
+            $page->update([
+                'draft_revision_id' => $revision->getKey(),
+            ]);
+
+            $this->audit->record('page.repaired_empty_revision', $page, [
+                'page_key' => $page->key,
+                'revision_id' => $revision->getKey(),
+                'revision_version' => $revision->version,
+                'template' => $template['key'],
+            ]);
+
+            return $revision;
+        });
+    }
+
     public function updateDraft(Page $page, array $attributes): PageRevision
     {
         return DB::transaction(function () use ($page, $attributes): PageRevision {
@@ -282,6 +328,34 @@ final class PageManager
     private function nextVersion(Page $page): int
     {
         return ((int) $page->revisions()->max('version')) + 1;
+    }
+
+    private function emptySections(array $template): array
+    {
+        $sections = [];
+
+        foreach ($template['sections'] as $section) {
+            foreach ($section['fields'] as $field) {
+                $sections[$section['key']][$field['key']] = $field['type'] === 'boolean' ? false : null;
+            }
+        }
+
+        return $sections;
+    }
+
+    private function fallbackSlug(Page $page): string
+    {
+        $slug = $page->published_slug ?: $page->key ?: 'page-'.$page->getKey();
+        $slug = trim((string) $slug, '/');
+
+        return preg_match('/^[a-z0-9][a-z0-9-]*$/', $slug) === 1 ? $slug : 'page-'.$page->getKey();
+    }
+
+    private function fallbackTitle(Page $page): string
+    {
+        $slug = $this->fallbackSlug($page);
+
+        return str($slug)->replace('-', ' ')->headline()->toString();
     }
 
     private function fieldPath(string $path): array

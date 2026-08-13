@@ -427,6 +427,23 @@ final class CoreTest extends TestCase
         $this->get('/deyvo/custom/unknown')->assertNotFound();
     }
 
+    public function test_debug_dashboard_tab_is_controlled_by_one_env_backed_config_flag(): void
+    {
+        self::assertTrue(Route::has('deyvo.dashboard.debug.index'));
+        $this->get('/deyvo/debug')->assertNotFound();
+
+        config()->set('deyvo-core.debug.enabled', true);
+
+        self::assertTrue(Route::has('deyvo.dashboard.debug.index'));
+        $this->get('/deyvo/debug')
+            ->assertOk()
+            ->assertSee('Debug')
+            ->assertSee('deyvo-core.dashboard.pages.enabled')
+            ->assertSee('deyvo.dashboard.pages.edit')
+            ->assertSee('expected_page_edit_url_for_id_1')
+            ->assertSee('Legacy Tabellen');
+    }
+
     public function test_dashboard_manages_schema_defined_header_and_footer_layouts(): void
     {
         app(DashboardManager::class)->registerSchema(json_encode([
@@ -605,6 +622,50 @@ final class CoreTest extends TestCase
         self::assertSame('Pagina Beheerder', PageRevision::query()->findOrFail($page->draft_revision_id)->updated_by_name);
         $this->post("/deyvo/pages/{$page->id}/revisions/{$page->published_revision_id}/restore")->assertRedirect();
         self::assertSame(3, PageRevision::query()->count());
+    }
+
+    public function test_dashboard_page_edit_repairs_existing_pages_without_revisions(): void
+    {
+        config()->set('deyvo-core.dashboard.path', 'dashboard');
+        require __DIR__.'/../routes/pages.php';
+        Route::getRoutes()->refreshNameLookups();
+
+        app(DashboardManager::class)->registerSchema(json_encode([
+            'pages' => [],
+            'templates' => [
+                [
+                    'key' => 'standard-page',
+                    'label' => 'Standaardpagina',
+                    'sections' => [
+                        [
+                            'key' => 'hero',
+                            'label' => 'Hero',
+                            'fields' => [
+                                [
+                                    'key' => 'title',
+                                    'label' => 'Titel',
+                                    'type' => 'text',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $page = Page::query()->create([
+            'key' => 'legacy-page',
+        ]);
+
+        $this->get('/dashboard/pages/1/edit')
+            ->assertOk()
+            ->assertSee('Legacy Page')
+            ->assertSee('Concept opslaan');
+
+        $page->refresh();
+        self::assertNotNull($page->draft_revision_id);
+        self::assertSame(1, $page->revisions()->count());
+        self::assertSame('standard-page', $page->draftRevision()->firstOrFail()->template);
     }
 
     public function test_preview_markers_and_autosave_keep_published_content_intact(): void
