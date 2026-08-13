@@ -26,6 +26,13 @@ return [
         'enabled' => env('DEYVO_DEBUG_ENABLED', false),
     ],
 
+    'errors' => [
+        'public_404_view' => env('DEYVO_PUBLIC_404_VIEW', 'deyvo::errors.404'),
+        'public_404_layout_view' => env('DEYVO_PUBLIC_404_LAYOUT_VIEW', 'layout.app'),
+        'public_404_layout_section' => env('DEYVO_PUBLIC_404_LAYOUT_SECTION', 'content'),
+        'dashboard_404_view' => env('DEYVO_DASHBOARD_404_VIEW', 'deyvo::dashboard.errors.404'),
+    ],
+
     'features' => [],
 
     'health' => [

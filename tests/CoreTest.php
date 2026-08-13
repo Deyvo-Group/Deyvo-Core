@@ -79,6 +79,10 @@ final class CoreTest extends TestCase
         self::assertSame('dashboard', config('deyvo-core.dashboard.path'));
         self::assertSame(['web'], config('deyvo-core.dashboard.middleware'));
         self::assertSame('logout', config('deyvo-core.dashboard.logout_route'));
+        self::assertSame('deyvo::errors.404', config('deyvo-core.errors.public_404_view'));
+        self::assertSame('layout.app', config('deyvo-core.errors.public_404_layout_view'));
+        self::assertSame('content', config('deyvo-core.errors.public_404_layout_section'));
+        self::assertSame('deyvo::dashboard.errors.404', config('deyvo-core.errors.dashboard_404_view'));
         self::assertIsArray(config('deyvo-core.dashboard.pages'));
         self::assertTrue(config('deyvo-core.dashboard.media.enabled'));
         self::assertTrue(config('deyvo-core.dashboard.menus.enabled'));
@@ -141,6 +145,40 @@ final class CoreTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('Overzicht', $response->getContent());
         self::assertStringContainsString('Content toevoegen', $response->getContent());
+    }
+
+    public function test_public_404_uses_the_core_error_view(): void
+    {
+        $this->get('/bestaat-echt-niet')
+            ->assertNotFound()
+            ->assertSee('Deze pagina bestaat niet.')
+            ->assertSee('Deze pagina is op koffiepauze en heeft geen terugkomsttijd doorgegeven.')
+            ->assertSee('Terug naar de website');
+    }
+
+    public function test_public_404_can_render_inside_the_host_header_and_footer_layout(): void
+    {
+        $this->app['view']->addLocation(__DIR__.'/Fixtures/views');
+
+        $this->get('/bestaat-echt-niet')
+            ->assertNotFound()
+            ->assertSee('Host website header')
+            ->assertSee('Deze pagina bestaat niet.')
+            ->assertSee('Host website footer');
+    }
+
+    public function test_dashboard_404_uses_the_core_dashboard_error_view(): void
+    {
+        $this->get('/deyvo/bestaat-echt-niet')
+            ->assertNotFound()
+            ->assertSee('Verdwaald in het dashboard.')
+            ->assertSee('Route kwijt. De beheerder in mij wijst naar de cache, maar fluistert: misschien was ik het.')
+            ->assertSee('data-deyvo-dashboard', false)
+            ->assertSee('Overzicht')
+            ->assertSee('Content')
+            ->assertSee('Gezocht pad')
+            ->assertSee('deyvo/bestaat-echt-niet')
+            ->assertSee('Naar dashboard');
     }
 
     public function test_dashboard_stores_content_and_settings(): void

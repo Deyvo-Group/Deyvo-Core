@@ -16,9 +16,12 @@ use Deyvo\Core\Support\AuditLogger;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Maintenance;
 use Deyvo\Core\Support\HtmlSanitizer;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CoreServiceProvider extends ServiceProvider
 {
@@ -50,6 +53,8 @@ class CoreServiceProvider extends ServiceProvider
         Blade::directive('deyvoEditable', static fn (string $expression): string => "<?php echo app(\\Deyvo\\Core\\Pages\\PageContent::class)->editable({$expression}); ?>");
         Blade::directive('deyvoEditor', static fn (): string => '<?php echo app(\\Deyvo\\Core\\Pages\\PageContent::class)->editor(); ?>');
 
+        $this->registerNotFoundRenderer();
+
         $this->app->booted(function () use ($router): void {
             $this->registerMiddleware($router);
         });
@@ -62,6 +67,7 @@ class CoreServiceProvider extends ServiceProvider
             $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
             $this->loadRoutesFrom(__DIR__.'/../../routes/dashboard.php');
             $this->loadRoutesFrom(__DIR__.'/../../routes/pages.php');
+            $this->loadRoutesFrom(__DIR__.'/../../routes/dashboard-fallback.php');
         }
 
         $this->publishes([
@@ -98,6 +104,75 @@ class CoreServiceProvider extends ServiceProvider
         if (config('deyvo-core.security_headers.enabled', true)) {
             $router->pushMiddlewareToGroup($group, SecurityHeadersMiddleware::class);
         }
+    }
+
+    private function registerNotFoundRenderer(): void
+    {
+        $register = function (ExceptionHandler $handler): void {
+            if (! method_exists($handler, 'renderable')) {
+                return;
+            }
+
+            $handler->renderable(function (NotFoundHttpException $exception, Request $request) {
+                $view = $this->notFoundViewFor($request);
+
+                if ($view === '' || ! view()->exists($view)) {
+                    return null;
+                }
+
+                return response()->view($view, [
+                    'dashboardPath' => trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'),
+                    'exception' => $exception,
+                    'request' => $request,
+                ], 404);
+            });
+        };
+
+        if ($this->app->resolved(ExceptionHandler::class)) {
+            $register($this->app->make(ExceptionHandler::class));
+
+            return;
+        }
+
+        $this->app->afterResolving(ExceptionHandler::class, $register);
+    }
+
+    private function notFoundViewFor(Request $request): string
+    {
+        if ($this->isDashboardRequest($request)) {
+            return (string) config('deyvo-core.errors.dashboard_404_view', 'deyvo::dashboard.errors.404');
+        }
+
+        $view = (string) config('deyvo-core.errors.public_404_view', 'deyvo::errors.404');
+
+        if ($view === 'deyvo::errors.404' && $this->public404LayoutExists()) {
+            return 'deyvo::errors.404-with-layout';
+        }
+
+        return $view;
+    }
+
+    private function public404LayoutExists(): bool
+    {
+        $layout = (string) config('deyvo-core.errors.public_404_layout_view', 'layout.app');
+        $section = (string) config('deyvo-core.errors.public_404_layout_section', 'content');
+
+        if ($layout === '' || $section === '') {
+            return false;
+        }
+
+        return view()->exists($layout);
+    }
+
+    private function isDashboardRequest(Request $request): bool
+    {
+        if (! config('deyvo-core.dashboard.enabled', false)) {
+            return false;
+        }
+
+        $path = trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/');
+
+        return $path !== '' && ($request->is($path) || $request->is($path.'/*'));
     }
 
     private function mergeRecursiveConfigFrom(string $path, string $key): void
