@@ -8,8 +8,11 @@ use Deyvo\Core\Http\Controllers\Dashboard\PagePreviewController;
 use Deyvo\Core\Http\Middleware\AuditDashboardFailuresMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
-    ->middleware([...config('deyvo-core.dashboard.middleware', ['web', 'auth']), AuditDashboardFailuresMiddleware::class])
+$dashboardPath = trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/');
+$dashboardMiddleware = [...config('deyvo-core.dashboard.middleware', ['web', 'auth']), AuditDashboardFailuresMiddleware::class];
+
+Route::prefix($dashboardPath)
+    ->middleware($dashboardMiddleware)
     ->as('deyvo.dashboard.pages.')
     ->group(function (): void {
         Route::get('pages', [PageController::class, 'index'])->name('index');
@@ -24,3 +27,12 @@ Route::prefix(trim((string) config('deyvo-core.dashboard.path', 'deyvo'), '/'))
         Route::get('pages/{page}/revisions', [PageController::class, 'revisions'])->name('revisions');
         Route::post('pages/{page}/revisions/{revision}/restore', [PageController::class, 'restore'])->name('revisions.restore');
     });
+
+if ($dashboardPath !== '') {
+    Route::middleware($dashboardMiddleware)
+        ->as('deyvo.dashboard.pages.legacy.')
+        ->group(function (): void {
+            Route::get('pages/{page}/edit', static fn (string $page) => redirect()->route('deyvo.dashboard.pages.edit', ['page' => $page]))
+                ->name('edit');
+        });
+}

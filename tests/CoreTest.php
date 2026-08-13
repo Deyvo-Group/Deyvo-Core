@@ -512,6 +512,7 @@ final class CoreTest extends TestCase
     public function test_pages_support_drafts_publications_and_revision_restore(): void
     {
         self::assertTrue(Route::has('deyvo.dashboard.pages.edit'));
+        self::assertTrue(Route::has('deyvo.dashboard.pages.legacy.edit'));
 
         $this->actingAs(new GenericUser([
             'id' => 8,
@@ -572,6 +573,7 @@ final class CoreTest extends TestCase
         self::assertNull($page->published_revision_id);
         self::assertSame('Welkom', PageRevision::query()->firstOrFail()->sections['hero']['title']);
         self::assertSame('Pagina Beheerder', PageRevision::query()->firstOrFail()->created_by_name);
+        $this->get("/pages/{$page->id}/edit")->assertRedirect(route('deyvo.dashboard.pages.edit', $page));
         $this->get('/deyvo/pages')->assertOk()->assertSee('Concept')->assertSee('/home');
 
         $this->post("/deyvo/pages/{$page->id}/publish")->assertRedirect();
