@@ -131,6 +131,10 @@ De activiteitspagina staat standaard in de dashboardnavigatie. Schakel registrat
 
 Of gebruik `DEYVO_AUDIT_ENABLED=false` in `.env`. Voer na een Core-update altijd `php artisan migrate` uit voor de nieuwe audit- en auteurkolommen.
 
+### Debugtab
+
+Zet `DEYVO_DEBUG_ENABLED=true` om een tijdelijk **Debug**-tabje in het dashboard te tonen. Dit scherm toont dashboardconfiguratie, route-cache status, geregistreerde Core-routes, schema-informatie, Core page/revision-diagnose en samples uit oude legacy-tabellen. Zet de vlag uit buiten lokaal debuggen.
+
 ### Account en uitloggen
 
 De dashboardkop en editorbalk tonen de naam van de ingelogde gebruiker uit de hostapplicatie. Core toont de uitlogknop uitsluitend als de geconfigureerde named route bestaat. Fortify gebruikt standaard `logout`.

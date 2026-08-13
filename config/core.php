@@ -22,6 +22,10 @@ return [
         'enabled' => env('DEYVO_AUDIT_ENABLED', true),
     ],
 
+    'debug' => [
+        'enabled' => env('DEYVO_DEBUG_ENABLED', false),
+    ],
+
     'features' => [],
 
     'health' => [

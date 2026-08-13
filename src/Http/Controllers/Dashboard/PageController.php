@@ -70,9 +70,17 @@ final class PageController
 
     public function edit(Page $page): View
     {
-        $revision = $this->pages->draft($page);
+        try {
+            $revision = $this->pages->editable($page);
+        } catch (InvalidArgumentException $exception) {
+            $this->audit->record('page.edit_failed', $page, [
+                'page_key' => $page->key,
+                'message' => $exception->getMessage(),
+            ]);
 
-        abort_unless($revision instanceof PageRevision, 404);
+            abort(404, $exception->getMessage());
+        }
+
         $template = $this->template($revision->template);
 
         return view('deyvo::dashboard.pages.edit', [

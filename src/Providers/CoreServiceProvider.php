@@ -61,10 +61,7 @@ class CoreServiceProvider extends ServiceProvider
         if (config('deyvo-core.dashboard.enabled', false)) {
             $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
             $this->loadRoutesFrom(__DIR__.'/../../routes/dashboard.php');
-
-            if (config('deyvo-core.dashboard.pages.enabled', false)) {
-                $this->loadRoutesFrom(__DIR__.'/../../routes/pages.php');
-            }
+            $this->loadRoutesFrom(__DIR__.'/../../routes/pages.php');
         }
 
         $this->publishes([

@@ -97,6 +97,15 @@ final class DashboardManager
             ];
         }
 
+        if (config('deyvo-core.debug.enabled', false)) {
+            $navigation[] = [
+                'label' => 'Debug',
+                'route' => 'deyvo.dashboard.debug.index',
+                'active' => 'deyvo.dashboard.debug.*',
+                'sort' => 90,
+            ];
+        }
+
         foreach ($this->customPages() as $page) {
             $navigation[] = [
                 'label' => $page['label'],
