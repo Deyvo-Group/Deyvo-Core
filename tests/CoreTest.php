@@ -15,6 +15,7 @@ use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Models\Setting;
 use Deyvo\Core\Pages\PageManager;
+use Deyvo\Core\Providers\CoreServiceProvider;
 use Deyvo\Core\Support\SiteContent;
 use Deyvo\Core\Support\SiteSettings;
 use Deyvo\Core\Support\Feature;
@@ -60,6 +61,27 @@ final class CoreTest extends TestCase
             'resources/css/app.css',
             'resources/js/app.js',
         ], $configuration['dashboard']['vite']);
+    }
+
+    public function test_package_config_is_merged_recursively_for_stale_host_configs(): void
+    {
+        config()->set('deyvo-core', [
+            'dashboard' => [
+                'enabled' => true,
+                'path' => 'dashboard',
+                'middleware' => ['web'],
+            ],
+        ]);
+
+        (new CoreServiceProvider($this->app))->register();
+
+        self::assertTrue(config('deyvo-core.dashboard.enabled'));
+        self::assertSame('dashboard', config('deyvo-core.dashboard.path'));
+        self::assertSame(['web'], config('deyvo-core.dashboard.middleware'));
+        self::assertSame('logout', config('deyvo-core.dashboard.logout_route'));
+        self::assertIsArray(config('deyvo-core.dashboard.pages'));
+        self::assertTrue(config('deyvo-core.dashboard.media.enabled'));
+        self::assertTrue(config('deyvo-core.dashboard.menus.enabled'));
     }
 
     public function test_locale_and_timezone_configuration_are_applied_to_web_routes(): void
@@ -489,6 +511,8 @@ final class CoreTest extends TestCase
 
     public function test_pages_support_drafts_publications_and_revision_restore(): void
     {
+        self::assertTrue(Route::has('deyvo.dashboard.pages.edit'));
+
         $this->actingAs(new GenericUser([
             'id' => 8,
             'name' => 'Pagina Beheerder',
