@@ -30,10 +30,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->singleton(AuditLogger::class);
         $this->app->singleton(HtmlSanitizer::class);
 
-        $this->mergeConfigFrom(
-            __DIR__.'/../../config/core.php',
-            'deyvo-core'
-        );
+        $this->mergeRecursiveConfigFrom(__DIR__.'/../../config/core.php', 'deyvo-core');
     }
 
     public function boot(Router $router): void
@@ -104,5 +101,37 @@ class CoreServiceProvider extends ServiceProvider
         if (config('deyvo-core.security_headers.enabled', true)) {
             $router->pushMiddlewareToGroup($group, SecurityHeadersMiddleware::class);
         }
+    }
+
+    private function mergeRecursiveConfigFrom(string $path, string $key): void
+    {
+        $defaults = require $path;
+        $configured = $this->app['config']->get($key, []);
+
+        $this->app['config']->set(
+            $key,
+            $this->mergeConfig($defaults, is_array($configured) ? $configured : []),
+        );
+    }
+
+    private function mergeConfig(array $defaults, array $configured): array
+    {
+        foreach ($configured as $key => $value) {
+            if (
+                is_array($value)
+                && isset($defaults[$key])
+                && is_array($defaults[$key])
+                && ! array_is_list($value)
+                && ! array_is_list($defaults[$key])
+            ) {
+                $defaults[$key] = $this->mergeConfig($defaults[$key], $value);
+
+                continue;
+            }
+
+            $defaults[$key] = $value;
+        }
+
+        return $defaults;
     }
 }
