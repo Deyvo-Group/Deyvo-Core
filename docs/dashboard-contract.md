@@ -115,6 +115,19 @@ Core geeft het dashboard standaard een blauwe gradient. Een website kan een eige
 
 Gebruik `DEYVO_DASHBOARD_GRADIENT` voor dezelfde instelling in `.env`.
 
+### 404-pagina's
+
+Core levert standaard twee 404-views: `deyvo::errors.404` voor de publieke website en `deyvo::dashboard.errors.404` voor dashboardpaden. De dashboardvariant wordt gekoppeld aan `dashboard.path` en een fallback-route die na de dashboard- en pageroutes wordt geladen, zodat `dashboard.middleware` van de host blijft gelden.
+
+~~~env
+DEYVO_PUBLIC_404_VIEW=deyvo::errors.404
+DEYVO_PUBLIC_404_LAYOUT_VIEW=layout.app
+DEYVO_PUBLIC_404_LAYOUT_SECTION=content
+DEYVO_DASHBOARD_404_VIEW=deyvo::dashboard.errors.404
+~~~
+
+De publieke 404 rendert standaard binnen `layout.app` wanneer die host-layout bestaat, zodat header en footer zichtbaar blijven. Zet `DEYVO_PUBLIC_404_LAYOUT_VIEW` naar een andere section-based layout, of leeg wanneer Core de fallback-layout moet gebruiken. Een host kan de 404-viewwaarden naar eigen viewnamen laten wijzen wanneer de website volledig eigen foutpagina's nodig heeft.
+
 ### Activiteit en auteurs
 
 Core gebruikt uitsluitend de ingelogde gebruiker van de hostmiddleware. Core voegt geen users, login of permissies toe. De dashboardkop en editorbalk tonen de huidige gebruiker wanneer de host die levert.

@@ -55,6 +55,19 @@ DEYVO_DEBUG_ENABLED=true
 
 The debug screen shows dashboard config, route registration, cache state, Core table counts, page/revision diagnostics, schema status and legacy table samples. Keep it disabled outside local troubleshooting.
 
+## Error Pages
+
+Core renders separate 404 pages for public requests and dashboard requests. Dashboard 404s are detected through the configured dashboard path and are also covered by a dashboard fallback route loaded after the dashboard and page routes.
+
+```env
+DEYVO_PUBLIC_404_VIEW=deyvo::errors.404
+DEYVO_PUBLIC_404_LAYOUT_VIEW=layout.app
+DEYVO_PUBLIC_404_LAYOUT_SECTION=content
+DEYVO_DASHBOARD_404_VIEW=deyvo::dashboard.errors.404
+```
+
+The public 404 view renders inside `layout.app` when that host layout exists, so the website header and footer stay visible. Set `DEYVO_PUBLIC_404_LAYOUT_VIEW` to another section-based layout, or leave it empty to use Core's fallback layout. Set either 404 view value to a host view name when a website needs full custom presentation.
+
 ## Dashboard Gradient
 
 The dashboard keeps a blue Core gradient by default. Override it per website in `config/deyvo-core.php`.
