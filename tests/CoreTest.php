@@ -15,6 +15,7 @@ use Deyvo\Core\Models\Page;
 use Deyvo\Core\Models\PageRevision;
 use Deyvo\Core\Models\Setting;
 use Deyvo\Core\Pages\PageManager;
+use Deyvo\Core\Pages\PageContent;
 use Deyvo\Core\Providers\CoreServiceProvider;
 use Deyvo\Core\Support\SiteContent;
 use Deyvo\Core\Support\SiteSettings;
@@ -126,6 +127,17 @@ final class CoreTest extends TestCase
             ->assertSee('Deyvo Core werkt')
             ->assertSee('Gedeeld formulier')
             ->assertSee('Health endpoint');
+    }
+
+    public function test_page_content_helpers_do_not_require_a_session_store(): void
+    {
+        $this->app->instance('request', Request::create('/zonder-sessie'));
+
+        self::assertSame('Fallback titel', deyvo_content('home.hero.title', 'Fallback titel'));
+        self::assertStringContainsString(
+            'data-deyvo-editor hidden',
+            app(PageContent::class)->editor()->toHtml(),
+        );
     }
 
     public function test_web_middleware_preserves_application_headers(): void

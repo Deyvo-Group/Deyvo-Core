@@ -15,6 +15,10 @@ final class PagePreviewState
 
     public function start(Page $page, PageRevision $revision): void
     {
+        if (! $this->hasSession()) {
+            return;
+        }
+
         request()->session()->put(self::SessionKey, [
             'page_id' => $page->getKey(),
             'page_key' => $page->key,
@@ -25,13 +29,17 @@ final class PagePreviewState
 
     public function stop(): void
     {
+        if (! $this->hasSession()) {
+            return;
+        }
+
         request()->session()->forget(self::SessionKey);
         $this->revisions = [];
     }
 
     public function revision(string $pageKey): ?PageRevision
     {
-        $state = request()->session()->get(self::SessionKey);
+        $state = $this->state();
 
         if (! is_array($state) || ($state['page_key'] ?? null) !== $pageKey) {
             return null;
@@ -60,9 +68,25 @@ final class PagePreviewState
 
     public function current(): ?PageRevision
     {
-        $state = request()->session()->get(self::SessionKey);
+        $state = $this->state();
         $pageKey = is_array($state) ? ($state['page_key'] ?? null) : null;
 
         return is_string($pageKey) ? $this->revision($pageKey) : null;
+    }
+
+    private function state(): ?array
+    {
+        if (! $this->hasSession()) {
+            return null;
+        }
+
+        $state = request()->session()->get(self::SessionKey);
+
+        return is_array($state) ? $state : null;
+    }
+
+    private function hasSession(): bool
+    {
+        return app()->bound('request') && request()->hasSession();
     }
 }
