@@ -28,7 +28,7 @@
 <body class="min-h-screen bg-neutral-100 text-neutral-950 antialiased" data-deyvo-dashboard @if (is_string($gradient) && trim($gradient) !== '') style="--deyvo-dashboard-gradient: {{ $gradient }};" @endif>
     <div class="min-h-screen md:grid md:grid-cols-[17.5rem_minmax(0,1fr)]" data-deyvo-dashboard-shell>
         <aside class="hidden px-4 py-5 text-neutral-200 md:flex md:flex-col" data-deyvo-dashboard-sidebar>
-            <a href="{{ route('deyvo.dashboard.index') }}" class="flex items-center gap-3 px-3 text-lg font-semibold text-white" data-deyvo-dashboard-brand>
+            <a href="{{ route('deyvo.dashboard.index') }}" class="flex shrink-0 items-center gap-3 px-3 text-lg font-semibold text-white" data-deyvo-dashboard-brand>
                 <span class="inline-flex size-9 items-center justify-center text-sm font-bold" data-deyvo-dashboard-brand-mark>{{ $brandInitial }}</span>
                 <span class="min-w-0">
                     <span class="block truncate">{{ $appName }}</span>
@@ -36,7 +36,7 @@
                 </span>
             </a>
 
-            <nav class="mt-8 space-y-5" aria-label="Dashboard navigatie">
+            <nav class="mt-8 min-h-0 flex-1 space-y-5 overflow-y-auto pr-1" aria-label="Dashboard navigatie" data-deyvo-dashboard-sidebar-nav>
                 @foreach ($navigationGroups as $group)
                     <div data-deyvo-dashboard-nav-group>
                         <p class="px-3 text-xs font-semibold text-neutral-500" data-deyvo-dashboard-nav-heading>{{ $group['label'] }}</p>
@@ -56,7 +56,7 @@
                 @endforeach
             </nav>
 
-            <div class="mt-auto rounded-md border border-white/10 px-3 py-3 text-xs text-neutral-400" data-deyvo-dashboard-sidebar-footer>
+            <div class="mt-5 shrink-0 rounded-md border border-white/10 px-3 py-3 text-xs text-neutral-400" data-deyvo-dashboard-sidebar-footer>
                 <p class="font-semibold text-neutral-200">Deyvo Core</p>
                 <p class="mt-1 truncate">{{ config('deyvo-core.version') }}</p>
             </div>

@@ -178,6 +178,8 @@ final class CoreTest extends TestCase
 
         $this->get('/deyvo')
             ->assertOk()
+            ->assertSee('data-deyvo-dashboard-sidebar-nav', false)
+            ->assertSee('overflow-y-auto', false)
             ->assertSee('data-deyvo-dashboard-nav-group', false)
             ->assertSee('data-deyvo-dashboard-nav-heading', false)
             ->assertSee('Start')

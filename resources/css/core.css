@@ -53,6 +53,7 @@
     position: sticky;
     top: 0;
     height: 100vh;
+    overflow: hidden;
     background: linear-gradient(180deg, #151715 0%, #1c2622 48%, #123f39 100%);
 }
 
@@ -71,6 +72,11 @@
     border: 1px solid transparent;
     border-radius: 8px;
     letter-spacing: 0;
+}
+
+[data-deyvo-dashboard-sidebar-nav] {
+    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+    scrollbar-width: thin;
 }
 
 [data-deyvo-dashboard-nav-group] + [data-deyvo-dashboard-nav-group] {
