@@ -3,7 +3,9 @@
 ])
 
 @php($appName = config('deyvo-core.name', config('app.name', 'Deyvo')))
-@php($navigation = app(\Deyvo\Core\Dashboard\DashboardManager::class)->navigation())
+@php($dashboard = app(\Deyvo\Core\Dashboard\DashboardManager::class))
+@php($navigation = $dashboard->navigation())
+@php($navigationGroups = $dashboard->navigationGroups())
 @php($vite = config('deyvo-core.dashboard.vite', []))
 @php($actor = app(\Deyvo\Core\Support\Actor::class)->current())
 @php($gradient = config('deyvo-core.ui.dashboard.gradient'))
@@ -34,16 +36,23 @@
                 </span>
             </a>
 
-            <nav class="mt-8 space-y-1" aria-label="Dashboard navigatie">
-                @foreach ($navigation as $item)
-                    @php($isActive = request()->routeIs($item['active']) && (! isset($item['page']) || request()->route('page') === $item['page']))
-                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" data-deyvo-dashboard-nav @class([
-                        'block rounded-md px-3 py-2.5 text-sm font-medium transition',
-                        'bg-white/10 text-white' => $isActive,
-                        'text-neutral-300 hover:bg-white/5 hover:text-white' => ! $isActive,
-                    ])>
-                        {{ $item['label'] }}
-                    </a>
+            <nav class="mt-8 space-y-5" aria-label="Dashboard navigatie">
+                @foreach ($navigationGroups as $group)
+                    <div data-deyvo-dashboard-nav-group>
+                        <p class="px-3 text-xs font-semibold text-neutral-500" data-deyvo-dashboard-nav-heading>{{ $group['label'] }}</p>
+                        <div class="mt-2 space-y-1">
+                            @foreach ($group['items'] as $item)
+                                @php($isActive = request()->routeIs($item['active']) && (! isset($item['page']) || request()->route('page') === $item['page']))
+                                <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" data-deyvo-dashboard-nav @class([
+                                    'block rounded-md px-3 py-2.5 text-sm font-medium transition',
+                                    'bg-white/10 text-white' => $isActive,
+                                    'text-neutral-300 hover:bg-white/5 hover:text-white' => ! $isActive,
+                                ])>
+                                    {{ $item['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
             </nav>
 

@@ -31,18 +31,21 @@ abstract class TestCase extends Orchestra
                     'route' => 'deyvo.dashboard.index',
                     'active' => 'deyvo.dashboard.index',
                     'sort' => 10,
+                    'group' => 'Start',
                 ],
                 [
                     'label' => 'Content',
                     'route' => 'deyvo.dashboard.contents.index',
                     'active' => 'deyvo.dashboard.contents.*',
                     'sort' => 20,
+                    'group' => 'Website',
                 ],
                 [
                     'label' => 'Instellingen',
                     'route' => 'deyvo.dashboard.settings.index',
                     'active' => 'deyvo.dashboard.settings.*',
                     'sort' => 30,
+                    'group' => 'Beheer',
                 ],
             ],
         ]);

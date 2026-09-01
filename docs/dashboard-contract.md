@@ -56,8 +56,9 @@ Gebruik vervolgens deze configuratie in config/deyvo-core.php.
 | menus.enabled | Boolean | Activeert menubeheer en publieke menuhelpers. |
 | seo.enabled | Boolean | Activeert globale SEO-defaults. |
 | users.enabled | Boolean | Activeert beheer via het geconfigureerde Laravel user-model. |
+| users.seed.enabled | Boolean | Activeert de standaarduser-seed binnen het geconfigureerde Laravel user-model. |
 
-Core levert geen login, rollen of permissies. De website levert de middleware die toegang tot het dashboard geeft; Core levert wel de dashboardroutes, modellen, views, migraties en helpers voor content, pages, settings, SEO, media, menu’s en users.
+Core levert geen loginroutes, eigen usermodel, rollen of permissies. De website levert de middleware die toegang tot het dashboard geeft; Core levert wel de dashboardroutes, modellen, views, migraties, helpers en optionele user-seed voor content, pages, settings, SEO, media, menu’s en users. De user-seed is ook los beschikbaar als `Deyvo\Core\Database\Seeders\DefaultUserSeeder`.
 
 ## Dashboard JSON
 
@@ -130,7 +131,7 @@ De publieke 404 rendert standaard binnen `layout.app` wanneer die host-layout be
 
 ### Activiteit en auteurs
 
-Core gebruikt uitsluitend de ingelogde gebruiker van de hostmiddleware. Core voegt geen users, login of permissies toe. De dashboardkop en editorbalk tonen de huidige gebruiker wanneer de host die levert.
+Core gebruikt uitsluitend de ingelogde gebruiker van de hostmiddleware. Core voegt geen loginroutes, rollen of permissies toe. `deyvo:seed-cms` kan wel een standaarduser in het geconfigureerde Laravel user-model aanmaken wanneer de host een usertabel heeft. De dashboardkop en editorbalk tonen de huidige gebruiker wanneer de host die levert.
 
 Nieuwe en bijgewerkte paginarevisies bewaren een snapshot van de maker en laatste bewerker. Core registreert daarnaast content-, instellingen-, pagina-, preview- en foutacties in `deyvo_audit_logs`. Iedere regel bevat de gebruiker, request-id, requestpad, IP-adres en context zonder instellingenwaarden op te slaan.
 
@@ -170,6 +171,7 @@ Een item in pages verschijnt als een extra dashboardonderdeel.
   "label": "Algemeen",
   "description": "Beheer contactgegevens.",
   "sort": 40,
+  "group": "Website",
   "fields": [
     {
       "key": "contact.email",
@@ -195,6 +197,7 @@ Een item in pages verschijnt als een extra dashboardonderdeel.
 | label | Niet-lege tekst | Verplicht | Label in dashboard en formulier. |
 | description | Tekst | null | Uitleg onder de titel. |
 | sort | Integer | 100 | Positie in dashboardnavigatie. |
+| group | Tekst | Website | Kopje waaronder het item in de desktop-sidebar verschijnt. |
 | fields | Niet-lege array | Verplicht | Bewerkbare waarden. |
 
 ### Instellingsveld

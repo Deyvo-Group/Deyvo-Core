@@ -73,6 +73,16 @@
     letter-spacing: 0;
 }
 
+[data-deyvo-dashboard-nav-group] + [data-deyvo-dashboard-nav-group] {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 1rem;
+}
+
+[data-deyvo-dashboard-nav-heading] {
+    color: rgba(212, 212, 212, 0.58);
+    letter-spacing: 0;
+}
+
 [data-deyvo-dashboard-nav].text-white {
     border-color: rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.14);

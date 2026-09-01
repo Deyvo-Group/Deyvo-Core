@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Deyvo\Core\Console\Commands;
 
+use Deyvo\Core\Database\Seeders\DefaultUserSeeder;
 use Deyvo\Core\Models\Menu;
 use Deyvo\Core\Support\SiteSettings;
 use Illuminate\Console\Command;
@@ -12,7 +13,7 @@ final class SeedCmsCommand extends Command
 {
     protected $signature = 'deyvo:seed-cms {--force : Update existing default values as well}';
 
-    protected $description = 'Seed Deyvo Core CMS defaults for settings, SEO and menus.';
+    protected $description = 'Seed Deyvo Core CMS defaults for settings, SEO, menus and the default dashboard user.';
 
     public function handle(): int
     {
@@ -55,7 +56,15 @@ final class SeedCmsCommand extends Command
             );
         }
 
+        $userSeeder = new DefaultUserSeeder();
+        $userSeeder->setCommand($this);
+        $userStatus = $userSeeder->seed($force);
+
         $this->components->info("Deyvo Core CMS defaults seeded ({$count} settings).");
+
+        if ($userStatus !== null) {
+            $this->components->info("Standaard dashboarduser {$userStatus}.");
+        }
 
         return self::SUCCESS;
     }
