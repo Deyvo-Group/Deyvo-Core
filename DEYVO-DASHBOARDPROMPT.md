@@ -10,7 +10,7 @@ Je werkt in de bestaande Laravel-website op /Users/dirk/Documents/GitHub/DEYVO. 
 - Deyvo Core bevat een JSON-dashboardfunctie met DashboardSchema, de publish-tag deyvo-dashboard-schema en routes onder het bestaande dashboardpad.
 - De website heeft bestaande, niet-gecommitte wijzigingen. Behoud die altijd. Herstel geen verwijderde bestanden, voer geen reset uit en wijzig geen niet-gerelateerde code.
 - De website heeft al App\Support\CoreSettings. Gebruik deze helper voor settingwaarden met een veilige fallback.
-- De website heeft eigen authenticatie via Fortify. Behoud die. Deyvo Core levert en krijgt geen authenticatie, users, permissions, uploads of mediafunctionaliteit.
+- De website heeft eigen authenticatie via Fortify. Behoud die. Deyvo Core levert geen loginroutes, eigen usermodel, permissions, uploads of mediafunctionaliteit; de Core user-seed gebruikt uitsluitend het host-user-model wanneer dat geconfigureerd is.
 
 ## Doel
 

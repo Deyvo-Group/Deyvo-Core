@@ -11,7 +11,7 @@ Je werkt in een bestaande Laravel-websiterepository. Migreer deze site zorgvuldi
 - Bestaande functionaliteit, content, routes, modellen en styling blijven werken tenzij je ze bewust en veilig vervangt.
 - Gebruik waar passend de Deyvo Core Blade-componenten, basislayout, flashmeldingen, featureflags, healthcheck en dashboard.
 - Laat het bestaande authenticatie- en mediasysteem van de site intact.
-- Voeg geen authenticatie, users, rollen, permissions, uploads, media-modellen of mediafunctionaliteit aan Deyvo Core toe.
+- Voeg geen eigen authenticatie, usermodel, rollen, permissions, uploads, media-modellen of mediafunctionaliteit aan Deyvo Core toe; gebruik de Core user-seed alleen voor het bestaande host-user-model.
 - Gebruik geen Filament. Gebruik voor generieke content en instellingen het ingebouwde Deyvo-dashboard.
 
 ## Werkwijze

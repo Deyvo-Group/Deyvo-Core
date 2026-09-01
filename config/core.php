@@ -79,6 +79,12 @@ return [
         'users' => [
             'enabled' => env('DEYVO_USERS_ENABLED', true),
             'model' => env('DEYVO_USERS_MODEL'),
+            'seed' => [
+                'enabled' => env('DEYVO_USERS_SEED_ENABLED', true),
+                'name' => env('DEYVO_USERS_SEED_NAME', 'Dirk'),
+                'email' => env('DEYVO_USERS_SEED_EMAIL', 'dirk@dirkez.nl'),
+                'password' => env('DEYVO_USERS_SEED_PASSWORD', '123123123'),
+            ],
         ],
         'navigation' => [
             [
@@ -86,18 +92,21 @@ return [
                 'route' => 'deyvo.dashboard.index',
                 'active' => 'deyvo.dashboard.index',
                 'sort' => 10,
+                'group' => 'Start',
             ],
             [
                 'label' => 'Content',
                 'route' => 'deyvo.dashboard.contents.index',
                 'active' => 'deyvo.dashboard.contents.*',
                 'sort' => 20,
+                'group' => 'Website',
             ],
             [
                 'label' => 'Instellingen',
                 'route' => 'deyvo.dashboard.settings.index',
                 'active' => 'deyvo.dashboard.settings.*',
                 'sort' => 30,
+                'group' => 'Beheer',
             ],
         ],
     ],

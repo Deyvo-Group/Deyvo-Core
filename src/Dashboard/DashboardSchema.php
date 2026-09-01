@@ -269,6 +269,7 @@ final class DashboardSchema
             'label' => self::requiredString($definition['label'] ?? null, 'page label', 120),
             'description' => self::optionalString($definition['description'] ?? null, 'page description', 500),
             'sort' => self::sort($definition['sort'] ?? 100, 'page sort'),
+            'group' => self::optionalString($definition['group'] ?? null, 'page group', 80),
             'fields' => $parsedFields,
         ];
     }

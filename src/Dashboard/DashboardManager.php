@@ -14,13 +14,14 @@ final class DashboardManager
 
     private ?DashboardSchema $schema = null;
 
-    public function registerNavigation(string $label, string $route, string $active, int $sort = 100): void
+    public function registerNavigation(string $label, string $route, string $active, int $sort = 100, ?string $group = null): void
     {
         $this->navigation[] = [
             'label' => $label,
             'route' => $route,
             'active' => $active,
             'sort' => $sort,
+            'group' => $group,
         ];
     }
 
@@ -40,6 +41,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.pages.index',
                 'active' => 'deyvo.dashboard.pages.*',
                 'sort' => 15,
+                'group' => 'Website',
             ];
         }
 
@@ -49,6 +51,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.media.index',
                 'active' => 'deyvo.dashboard.media.*',
                 'sort' => 22,
+                'group' => 'Website',
             ];
         }
 
@@ -58,6 +61,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.menus.index',
                 'active' => 'deyvo.dashboard.menus.*',
                 'sort' => 24,
+                'group' => 'Website',
             ];
         }
 
@@ -67,6 +71,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.layouts.index',
                 'active' => 'deyvo.dashboard.layouts.*',
                 'sort' => 25,
+                'group' => 'Website',
             ];
         }
 
@@ -76,6 +81,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.seo.index',
                 'active' => 'deyvo.dashboard.seo.*',
                 'sort' => 28,
+                'group' => 'Website',
             ];
         }
 
@@ -85,6 +91,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.users.index',
                 'active' => 'deyvo.dashboard.users.*',
                 'sort' => 32,
+                'group' => 'Beheer',
             ];
         }
 
@@ -94,6 +101,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.activity.index',
                 'active' => 'deyvo.dashboard.activity.*',
                 'sort' => 35,
+                'group' => 'Beheer',
             ];
         }
 
@@ -103,6 +111,7 @@ final class DashboardManager
                 'route' => 'deyvo.dashboard.debug.index',
                 'active' => 'deyvo.dashboard.debug.*',
                 'sort' => 90,
+                'group' => 'Beheer',
             ];
         }
 
@@ -114,6 +123,7 @@ final class DashboardManager
                 'active' => 'deyvo.dashboard.custom.*',
                 'page' => $page['key'],
                 'sort' => $page['sort'],
+                'group' => $page['group'] ?? 'Website',
             ];
         }
 
@@ -122,9 +132,40 @@ final class DashboardManager
         return $navigation;
     }
 
+    public function navigationGroups(): array
+    {
+        $groups = [];
+
+        foreach ($this->navigation() as $item) {
+            $group = $this->navigationGroup($item);
+
+            if (! isset($groups[$group])) {
+                $groups[$group] = [
+                    'label' => $group,
+                    'items' => [],
+                ];
+            }
+
+            $groups[$group]['items'][] = $item;
+        }
+
+        return array_values($groups);
+    }
+
     public function customPages(): array
     {
         return $this->schema()->pages();
+    }
+
+    private function navigationGroup(array $item): string
+    {
+        $group = $item['group'] ?? null;
+
+        if (! is_string($group) || trim($group) === '') {
+            return 'Algemeen';
+        }
+
+        return trim($group);
     }
 
     public function page(string $key): ?array

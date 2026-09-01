@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Deyvo\Core\Tests;
 
 use Deyvo\Core\Dashboard\DashboardManager;
+use Deyvo\Core\Database\Seeders\DefaultUserSeeder;
 use Deyvo\Core\Http\Middleware\RequestIdMiddleware;
 use Deyvo\Core\Models\Content;
 use Deyvo\Core\Models\AuditLog;
@@ -21,6 +22,7 @@ use Deyvo\Core\Support\SiteContent;
 use Deyvo\Core\Support\SiteSettings;
 use Deyvo\Core\Support\Feature;
 use Deyvo\Core\Support\Flash;
+use Deyvo\Core\Tests\Fixtures\User as TestUser;
 use Illuminate\Http\Request;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Schema\Blueprint;
@@ -157,6 +159,31 @@ final class CoreTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('Overzicht', $response->getContent());
         self::assertStringContainsString('Content toevoegen', $response->getContent());
+    }
+
+    public function test_dashboard_sidebar_groups_navigation_items(): void
+    {
+        Route::get('/reports', static fn () => response('Reports'))->name('reports.index');
+        Route::getRoutes()->refreshNameLookups();
+
+        app(DashboardManager::class)->registerNavigation('Reports', 'reports.index', 'reports.*', 40, 'Rapportage');
+
+        $groups = app(DashboardManager::class)->navigationGroups();
+
+        self::assertSame(['Start', 'Website', 'Beheer', 'Rapportage'], array_column($groups, 'label'));
+        self::assertSame('Overzicht', $groups[0]['items'][0]['label']);
+        self::assertContains('Content', array_column($groups[1]['items'], 'label'));
+        self::assertContains('Instellingen', array_column($groups[2]['items'], 'label'));
+        self::assertSame('Reports', $groups[3]['items'][0]['label']);
+
+        $this->get('/deyvo')
+            ->assertOk()
+            ->assertSee('data-deyvo-dashboard-nav-group', false)
+            ->assertSee('data-deyvo-dashboard-nav-heading', false)
+            ->assertSee('Start')
+            ->assertSee('Website')
+            ->assertSee('Beheer')
+            ->assertSee('Rapportage');
     }
 
     public function test_public_404_uses_the_core_error_view(): void
@@ -354,6 +381,32 @@ final class CoreTest extends TestCase
         self::assertSame('legacy', Page::query()->where('key', 'legacy')->firstOrFail()->published_slug);
     }
 
+    public function test_core_seeds_default_dashboard_user_when_user_model_is_configured(): void
+    {
+        Schema::create('users', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->timestamps();
+        });
+        config()->set('deyvo-core.dashboard.users.model', TestUser::class);
+
+        $this->seed(DefaultUserSeeder::class);
+
+        $user = TestUser::query()->where('email', 'dirk@dirkez.nl')->firstOrFail();
+
+        self::assertSame('Dirk', $user->getAttribute('name'));
+        self::assertTrue(password_verify('123123123', (string) $user->getAttribute('password')));
+
+        $passwordHash = $user->getAttribute('password');
+
+        $this->artisan('deyvo:seed-cms')->assertSuccessful();
+
+        self::assertSame(1, TestUser::query()->count());
+        self::assertSame($passwordHash, TestUser::query()->where('email', 'dirk@dirkez.nl')->value('password'));
+    }
+
     public function test_dashboard_records_attributed_activity_and_renders_it(): void
     {
         Route::post('/logout', static fn () => response('Uitgelogd'))->name('logout');
@@ -414,6 +467,7 @@ final class CoreTest extends TestCase
                     'label' => 'Website',
                     'description' => 'Beheer de websitegegevens.',
                     'sort' => 40,
+                    'group' => 'Website',
                     'fields' => [
                         [
                             'key' => 'contact.email',
@@ -456,6 +510,7 @@ final class CoreTest extends TestCase
         $this->get('/deyvo')
             ->assertOk()
             ->assertSee('Website');
+        self::assertSame('Website', app(DashboardManager::class)->page('website')['group']);
         $this->get('/deyvo/custom/website')
             ->assertOk()
             ->assertSee('Beheer de websitegegevens.')

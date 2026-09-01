@@ -159,10 +159,16 @@ $header = SiteMenus::get('header');
 $image = SiteMedia::url(1);
 ```
 
-Seed Core's default contact, SEO and menu records when bootstrapping a site.
+Seed Core's default contact, SEO, menu records and default dashboard user when bootstrapping a site. The user seed uses the configured Laravel user model and creates `dirk@dirkez.nl` with password `123123123` when the users table is available.
 
 ```bash
 php artisan deyvo:seed-cms
+```
+
+The default user seeder can also run on its own.
+
+```bash
+php artisan db:seed --class="Deyvo\\Core\\Database\\Seeders\\DefaultUserSeeder"
 ```
 
 Import old host-owned CMS tables after running the Core migrations.
@@ -181,9 +187,12 @@ app(DashboardManager::class)->registerNavigation(
     'Reports',
     'reports.index',
     'reports.*',
-    40
+    40,
+    'Rapportage'
 );
 ```
+
+Navigation items support a `group` value. The desktop sidebar renders each group as a heading with its links underneath.
 
 ## Custom Dashboard Schema
 
@@ -210,6 +219,7 @@ The schema supports text, textarea, html, email, url, media, select, and boolean
           "label": "Website",
           "description": "Pas algemene websitegegevens aan.",
           "sort": 40,
+          "group": "Website",
           "fields": [
             {
               "key": "contact.email",
@@ -391,7 +401,7 @@ SEO defaults are stored as typed settings and can be read with `deyvo_seo()`.
 <meta name="robots" content="{{ $seo['robots'] }}">
 ```
 
-The users screen uses the configured Laravel user model from `DEYVO_USERS_MODEL` or `auth.providers.users.model`. Core still relies on the host application's auth middleware and permission policy.
+The users screen and default user seed use the configured Laravel user model from `DEYVO_USERS_MODEL` or `auth.providers.users.model`. Core still relies on the host application's auth middleware and permission policy.
 
 ## Block Builder
 
